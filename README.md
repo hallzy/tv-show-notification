@@ -80,3 +80,7 @@ with duplicate calendar entries after this, but at least the script will be back
 on track.
 
 
+
+## Thanks To
+
+* `tvmaze.com` for the amazingly easy to use API to gather TV Show data.
