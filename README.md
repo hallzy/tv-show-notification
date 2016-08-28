@@ -8,10 +8,10 @@ Shows.
 
 This will be a step by step guide to start using the script:
 
-Download the script. That is, the .gs file and put it somewhere in your google
-drive. It can be anywhere that your heart desires, so go crazy and make some
-folders to bury it in if that makes you happy :) The script can be named
-anything that you want.
+Open you Google Drive, and create a new Google Script file by clicking `New ->
+more -> Google Apps Script`. Call it whatever you want, and just copy the
+contents of `add-event-to-calendar.gs` to this new file. You can bury it in any
+folder you want, it doesn't care where it goes.
 
 In your Google Drive, create a new spreadsheet and call it whatever you want.
 We will use this spreadsheet to start adding TV Shows to. As a start, put the
@@ -58,6 +58,9 @@ triggers set up. Click here to add one now`.
 For the drop down menu under "Run" make sure you select "run". This runs the
 "run" function inside the script. For events, you can select any type of trigger
 you want. This will determine how often the script is run automatically.
+
+From this there is also a `notifications` button. If you set this up, the script
+will email you if it fails for some reason.
 
 Now we are done. You will never need to go back to the script. If you want to
 ever add or delete a show from being searched for, just edit the spreadsheet
