@@ -41,7 +41,15 @@ Then `1RSklW9SKI535TG0LnH9cjU2c3spLtnbPBAKWahUWO7I` is your id, so the
 var spreadsheet_id = "1RSklW9SKI535TG0LnH9cjU2c3spLtnbPBAKWahUWO7I"
 ```
 
-Now make sure that the script is saved.
+Now make sure that the script is saved. And run the script by pressing `Run ->
+run`. Google will ask you about some permissions such as asking if it is okay
+for the script to use spreadsheets and stuff like that. You have to say yes or
+the script won't run. If you added something to your sheet earlier, we should
+now have a calendar entry somewhere for that show, as long as it has an upcoming
+episode. If you don't have a calendar entry, check the spreadsheet to see of the
+"B" column was populated with a number. If it wasn't, file an issue. If it is
+populated, go to your Calendar and do a search. If nothing appears, it probably
+means there is no known upcoming episode for the show.
 
 Finally, while still inside the script, at the top of the screen click:
 `Resources -> Current Project's Triggers`. Now click the blue text that says `No
