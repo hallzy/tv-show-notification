@@ -68,10 +68,12 @@ file.
 
 ### What if I Accidentally mess with the "B" Column?
 
-You can just make it blank. A blank cell is interpreted as an undefined value
-and the script will create a starting number which will be the number of
-episodes that have aired before the current day's date. You may end up with
-duplicate calendar entries after this, but at least the script will be back on
-track.
+If it isn't too late to undo what you just did, then do that.
+
+Otherwise you can just make it blank. A blank cell is interpreted as an
+undefined value and the script will create a starting number which will be the
+number of episodes that have aired before the current day's date. You may end up
+with duplicate calendar entries after this, but at least the script will be back
+on track.
 
 
