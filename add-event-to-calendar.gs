@@ -6,6 +6,7 @@
 // URL = https://docs.google.com/spreadsheets/d/1RSklW9SKI535TG0LnH9cjU2c3spLtnbPBAKWahUWO7I/edit#gid=0
 // Change this variable
 var spreadsheet_id = "FILL THIS"
+var get_status_change_alert = true
 
 function add_show_to_calendar(title, date) {
   CalendarApp.getDefaultCalendar().createAllDayEvent(title, date);
@@ -13,6 +14,10 @@ function add_show_to_calendar(title, date) {
 
 function get_number_of_episodes(data) {
   return data['_embedded']['episodes'].length;
+}
+
+function get_show_status(data) {
+  return data['status'];
 }
 
 function getAirdate(data, episode_num) {
@@ -36,6 +41,13 @@ function getURL(name) {
 
 }
 
+function email_status_change(showname, old_val, new_val) {
+  var body = "The status of \"" + showname + "\" has changed from \"" + old_val + "\" to " + new_val + "\".";
+  var subject = "Automated Message: TV Show Status Change"
+  var recipient = Session.getActiveUser().getEmail();
+  MailApp.sendEmail(recipient, subject, body);
+}
+
 function run() {
   if (spreadsheet_id == "FILL THIS") {
     return
@@ -50,7 +62,7 @@ function run() {
 
     var showname = sheet[currentshow][0].toString()
     var showname_url = showname.toLowerCase();
-    //sheets[row][column] -- ie B1 = sheets[0][1]
+    //sheet[row][column] -- ie B1 = sheets[0][1]
     var number_of_episodes_we_know = undefined;
     var number_of_episodes_we_know = sheet[currentshow][1];
 
@@ -62,6 +74,23 @@ function run() {
     var episodes = data['_embedded']['episodes'];
 
     var num_episodes = get_number_of_episodes(data);
+
+    if (get_status_change_alert == true) {
+      var show_status_sheet = undefined;
+      var show_status_sheet = sheet[currentshow][2];
+      var show_status_current = get_show_status(data);
+
+      // This is the first time we are checking for the status of the show
+      if (show_status_sheet == null) {
+        show_status_sheet = show_status_current;
+        SpreadsheetApp.openById(spreadsheet_id).getSheets()[0].getRange(currentshow_base1, 3).setValue(show_status_sheet);
+      }
+      else if (show_status_sheet != show_status_current) {
+        email_status_change(showname, show_status_sheet, show_status_current);
+        show_status_sheet = show_status_current;
+        SpreadsheetApp.openById(spreadsheet_id).getSheets()[0].getRange(currentshow_base1, 3).setValue(show_status_sheet);
+      }
+    }
 
 
     // If we don't have a number, create it. The number will be the number of episodes that are before todays date
@@ -84,7 +113,6 @@ function run() {
       Logger.log(airdate);
       add_show_to_calendar(data['name'], airdate);
       number_of_episodes_we_know++;
-
     }
 
     //set number_of_episodes_we_know in the sheet
