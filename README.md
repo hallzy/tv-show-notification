@@ -4,7 +4,7 @@ This is a google script that fetches information about TV Shows, and will set
 calendar events in your Google Calendar for air dates of your favourite TV
 Shows.
 
-## Setup
+## Initial Setup
 
 This will be a step by step guide to start using the script:
 
@@ -66,20 +66,66 @@ Now we are done. You will never need to go back to the script. If you want to
 ever add or delete a show from being searched for, just edit the spreadsheet
 file.
 
+## Updating Your Script
+
+If you want to get a newer version of this script remove all the code from the
+current script you have, while saving the variables at the top of the code such
+as your spreadsheet id.
+
+Copy all of the new code into your current script (which is now empty) and
+replace the variables at the top with your settings.
+
+Check to see if the new code has a new variable at the top of the code. If you
+are unsure of what a variable is for or the possible options you can give, then
+see below in the section "Configuration Variables".
+
+Once you have filled in the variables, save the file and do a manual run. This
+will check to see if the script now requires new permissions for newly added
+features. In order to continue accept the new requirements.
+
+## Configuration Variables
+
+All variables must contain a value of some kind.
+
+### var spreadsheet_id
+
+This is a string that comes from the URL of the spreadsheet you will use to
+store your tv shows. For example, if your spreadsheet has the URL
+`https://docs.google.com/spreadsheets/d/1RSklW9SKI535TG0LnH9cjU2c3spLtnbPBAKWahUWO7I/edit#gid=0`,
+then your `spreadsheet_id` is `"1RSklW9SKI535TG0LnH9cjU2c3spLtnbPBAKWahUWO7I"`,
+with the quotes included.
+
+This is essential in order to get the script to work.
+
+### var get_status_change_alert
+
+This is a variable that controls if you get email notifications for a status
+change of a TV Show. For example, if you are following a TV Show, and it changes
+from `running` to `ended`, you will get a email notification saying that that TV
+Show has now ended.
+
+#### Possible Values:
+
+`var get_status_change_alert = true` means that you will receive the email
+notification when this occurs.
+
+`var get_status_change_alert = false` means that you will NOT receive the email
+notification when this occurs.
 
 ## Questions
 
-### What if I Accidentally mess with the "B" Column?
+### What if I Accidentally mess with the data in the sheet?
 
-If it isn't too late to undo what you just did, then do that.
+Changing the "A" column is perfectly okay, since this is the column you will use
+to tell the script what shows you want. You can freely add and delete new shows
+as you choose.
 
-Otherwise you can just make it blank. A blank cell is interpreted as an
-undefined value and the script will create a starting number which will be the
-number of episodes that have aired before the current day's date. You may end up
-with duplicate calendar entries after this, but at least the script will be back
-on track.
+If you change data in any of the other columns and ff it isn't too late to undo
+what you just did, then do that.
 
-
+Otherwise you can just make the cell blank. A blank cell is interpreted as an
+undefined value and the script will create a starting value, as if it was the
+first time it was populating that cell.
 
 ## Thanks To
 
