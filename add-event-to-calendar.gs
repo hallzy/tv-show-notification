@@ -4,12 +4,45 @@
 
 // For a sheet with
 // URL = https://docs.google.com/spreadsheets/d/1RSklW9SKI535TG0LnH9cjU2c3spLtnbPBAKWahUWO7I/edit#gid=0
-// Change this variable
+// Change these variables variable
 var spreadsheet_id = "FILL THIS"
 var get_status_change_alert = true
+var calendar_id = ""
 
+
+var month = new Array();
+month[0] = "January";
+month[1] = "February";
+month[2] = "March";
+month[3] = "April";
+month[4] = "May";
+month[5] = "June";
+month[6] = "July";
+month[7] = "August";
+month[8] = "September";
+month[9] = "October";
+month[10] = "November";
+month[11] = "December";
+
+var idx = 0;
 function add_show_to_calendar(title, date) {
-  CalendarApp.getDefaultCalendar().createAllDayEvent(title, date);
+  // If we are adding more than 10 calendar events at a time, wait for 3 seconds
+  // otherwise google will complain.
+  if (idx >= 10) {
+    Utilities.sleep(3000);
+    idx = 0;
+  }
+  else {
+    idx++;
+  }
+
+  // Use the default calendar if one is not specified.
+  if (calendar_id == "" || calendar_id == null) {
+    CalendarApp.getDefaultCalendar().createEvent(title, date[0], date[1]);
+  }
+  else {
+    CalendarApp.getCalendarById(calendar_id).createEvent(title, date[0], date[1]);
+  }
 }
 
 function get_number_of_episodes(data) {
@@ -21,15 +54,30 @@ function get_show_status(data) {
 }
 
 function getAirdate(data, episode_num) {
-  var dateStr = data['_embedded']['episodes'][episode_num]['airdate'];
+  var dateStr = data['_embedded']['episodes'][episode_num]['airstamp'];
+  var runtime = data['_embedded']['episodes'][episode_num]['runtime'];
 
   var arr = dateStr.split("-");
   var year = parseInt(arr[0], 10);
   // Months are base 0 for some reason
-  var month = parseInt(arr[1], 10) - 1;
+  var month_num = parseInt(arr[1], 10) - 1;
+  var month_str = month[month_num];
   var day = parseInt(arr[2], 10);
 
-  return new Date(year, month, day)
+  // There is a T in the stamp from tvmaze... so remove it.
+  arr = arr[2].split("T");
+  var day = arr[0];
+  var time = arr[1];
+  time = time.split('+').join(' +');
+  time = time.split('-').join(' -');
+
+  var date_str = month_str + " " + day + ", " + year + " " + time
+  var date_start = new Date(date_str);
+
+  var date_end = new Date(date_start)
+  date_end.setMinutes(date_start.getMinutes() + runtime)
+
+  return [date_start, date_end];
 }
 
 function getURL(name) {
@@ -48,11 +96,14 @@ function email_status_change(showname, old_val, new_val) {
   MailApp.sendEmail(recipient, subject, body);
 }
 
-function run() {
-  if (spreadsheet_id == "FILL THIS") {
-    return
-  }
+function email_error_about_no_airstamp(showname, episode_num) {
+  var body = "\"" + showname + "\"" + " episode #" + episode_num + " contains no information about the airdate. This episode was not automatically added to your calendar";
+  var subject = "Automated Message: TV Show Not Added to Calendar"
+  var recipient = Session.getActiveUser().getEmail();
+  MailApp.sendEmail(recipient, subject, body);
+}
 
+function run() {
   var sheet = SpreadsheetApp.openById(spreadsheet_id).getSheets()[0].getDataRange().getValues();
   var lastrow = SpreadsheetApp.openById(spreadsheet_id).getSheets()[0].getDataRange().getLastRow();
 
@@ -99,8 +150,13 @@ function run() {
 
       number_of_episodes_we_know = 0;
       for (var i = num_episodes-1; i >= 0; i--) {
+        var no_stamp = false;
+        var stamp = data['_embedded']['episodes'][i]['airstamp'];
+        if (stamp == null || stamp == "") {
+          continue;
+        }
         var airdate = getAirdate(data, i);
-        if (airdate < now) {
+        if (airdate[1] < now) {
           number_of_episodes_we_know = i+1;
           break;
         }
@@ -109,8 +165,15 @@ function run() {
 
     // if this happens, we need to add them to calendar
     while (num_episodes > number_of_episodes_we_know) {
+      var no_stamp = false;
+      var stamp = data['_embedded']['episodes'][number_of_episodes_we_know]['airstamp'];
+      if (stamp == null || stamp == "") {
+        number_of_episodes_we_know++;
+        Logger.log(showname);
+        email_error_about_no_airstamp(showname, number_of_episodes_we_know)
+        continue;
+      }
       airdate = getAirdate(data, number_of_episodes_we_know);
-      Logger.log(airdate);
       add_show_to_calendar(data['name'], airdate);
       number_of_episodes_we_know++;
     }
@@ -119,3 +182,4 @@ function run() {
     SpreadsheetApp.openById(spreadsheet_id).getSheets()[0].getRange(currentshow_base1, 2).setValue(number_of_episodes_we_know);
   }
 }
+

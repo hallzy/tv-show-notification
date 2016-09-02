@@ -2,7 +2,11 @@
 
 This is a google script that fetches information about TV Shows, and will set
 calendar events in your Google Calendar for air dates of your favourite TV
-Shows.
+Shows. The script will find the time of day the show airs as well.
+
+If the date and time cannot be found for a particular show, an email will be
+sent to you to warn you that this happened. The script will not check this
+episode again.
 
 The default `master` branch will be considered a more stable version than other
 branches. Unless otherwise stated, other branches will be working scripts but I
@@ -117,6 +121,24 @@ notification when this occurs.
 
 `var get_status_change_alert = false` means that you will NOT receive the email
 notification when this occurs.
+
+### var calendar_id
+
+This variable tells the script what calendar it should use.
+
+#### Possible Values:
+
+`var calendar_id = ""` or `var calendar_id = null` means that the script will
+use the default calendar that is setup (by default, this is the main calendar
+that comes with your account).
+
+`var calendar_id = "calendarid"` specifies to use a specific calendar based on
+the id. For this example my id is `calendarid`. To find your calendar id, go to
+your calendars. On the left side will be a list of calendars that you have.
+Hover over the calendar you want and click the little arrow that shows up to the
+right of the calendar name then select calendar settings. On this page you will
+see `Calendar ID: someid` where `someid` is your calendar id. Now copy this
+value and put it into the script as the above variable.
 
 ## Questions
 
