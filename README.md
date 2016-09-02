@@ -4,6 +4,12 @@ This is a google script that fetches information about TV Shows, and will set
 calendar events in your Google Calendar for air dates of your favourite TV
 Shows.
 
+The default `master` branch will be considered a more stable version than other
+branches. Unless otherwise stated, other branches will be working scripts but I
+have not tested them enough to be confident in them at this point. You are free
+to use whatever branch you want, just keep in mind that non master branches may
+be less reliable as I am still in the process of testing them.
+
 ## Initial Setup
 
 This will be a step by step guide to start using the script:
