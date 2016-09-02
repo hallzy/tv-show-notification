@@ -8,6 +8,7 @@
 var spreadsheet_id = "FILL THIS"
 var get_status_change_alert = true
 var calendar_id = ""
+var debug = false
 
 
 var month = new Array();
@@ -29,6 +30,7 @@ function add_show_to_calendar(title, date) {
   // If we are adding more than 10 calendar events at a time, wait for 3 seconds
   // otherwise google will complain.
   if (idx >= 10) {
+    Logger.log("Sleep for 3 seconds")
     Utilities.sleep(3000);
     idx = 0;
   }
@@ -38,25 +40,40 @@ function add_show_to_calendar(title, date) {
 
   // Use the default calendar if one is not specified.
   if (calendar_id == "" || calendar_id == null) {
+    Logger.log("Using default calendar")
     var myCalendar = CalendarApp.getDefaultCalendar()
   }
   else {
+    Logger.log("Using calendar: " + calendar_id)
     var myCalendar = CalendarApp.getCalendarById(calendar_id)
   }
   myCalendar.createEvent(title, date[0], date[1]);
+  Logger.log("Added Event: " + title + ", " + date[0] + " to " + date[1]);
+}
+
+function email_log() {
+  var body = Logger.getLog();
+  var subject = "TV Show Script: Execution Log"
+  var recipient = Session.getActiveUser().getEmail();
+  MailApp.sendEmail(recipient, subject, body);
 }
 
 function get_number_of_episodes(data) {
-  return data['_embedded']['episodes'].length;
+  var num = data['_embedded']['episodes'].length;
+  Logger.log("Number of episodes: " + num);
+  return num;
 }
 
 function get_show_status(data) {
+  Logger.log("status: " + data['status']);
   return data['status'];
 }
 
 function getAirdate(data, episode_num) {
   var dateStr = data['_embedded']['episodes'][episode_num]['airstamp'];
   var runtime = data['_embedded']['episodes'][episode_num]['runtime'];
+  Logger.log("AirStamp " + dateStr);
+  Logger.log("Runtime " + runtime);
 
   var arr = dateStr.split("-");
   var year = parseInt(arr[0], 10);
@@ -79,6 +96,8 @@ function getAirdate(data, episode_num) {
   var date_end = new Date(date_start)
   date_end.setMinutes(date_start.getMinutes() + runtime)
 
+  Logger.log("Start Stamp: " + date_start);
+  Logger.log("End Stamp: " + date_end);
   return [date_start, date_end];
 }
 
@@ -86,14 +105,22 @@ function getURL(name) {
   var url1 = "http://api.tvmaze.com/singlesearch/shows?q="
   var url2 = name;
   var url3 = "&embed=episodes"
+  var url = url1 + url2 + url3;
 
-  return url1 + url2 + url3;
+  Logger.log("URL: " + url);
+  return url;
 
 }
 
 function email_status_change(showname, old_val, new_val) {
-  var body = "The status of \"" + showname + "\" has changed from \"" + old_val;
-  body = body + "\" to " + new_val + "\".";
+  if (old_val == "" || old_val == null) {
+    var body = "The status of \"" + showname + "\" has initialized to \"";
+    body = body + new_val + "\".";
+  }
+  else {
+    var body = "The status of \"" + showname + "\" has changed from \"";
+    body = body + old_val + "\" to \"" + new_val + "\".";
+  }
   var subject = "Automated Message: TV Show Status Change"
   var recipient = Session.getActiveUser().getEmail();
   MailApp.sendEmail(recipient, subject, body);
@@ -118,6 +145,9 @@ function run() {
     var currentshow_base1 = currentshow+1;
 
     var showname = sheet_data[currentshow][0].toString()
+    Logger.log("==============================");
+    Logger.log("Show Name: " + showname);
+    Logger.log("Show Index: " + k);
     var showname_url = showname.toLowerCase();
     //sheet_data[row][column] -- ie B1 = sheet_data[0][1]
     var number_of_episodes_we_know = undefined;
@@ -187,6 +217,12 @@ function run() {
 
     //set number_of_episodes_we_know in the sheet
     sheet.getRange(currentshow_base1, 2).setValue(number_of_episodes_we_know);
+    Logger.log("==============================");
   }
+
+  if (debug == true) {
+    email_log();
+  }
+
 }
 

@@ -140,6 +140,18 @@ right of the calendar name then select calendar settings. On this page you will
 see `Calendar ID: someid` where `someid` is your calendar id. Now copy this
 value and put it into the script as the above variable.
 
+### var debug
+
+This variable tells the script if you want to get emailed log reports.
+
+#### Possible Values:
+
+`var calendar_id = true` means that you want to get emails with the logs for
+every execution of the script.
+
+`var calendar_id = false` means that you do NOT want to get emails with the logs
+at all.
+
 ## Questions
 
 ### What if I Accidentally mess with the data in the sheet?
