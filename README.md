@@ -152,6 +152,26 @@ every execution of the script.
 `var calendar_id = false` means that you do NOT want to get emails with the logs
 at all.
 
+
+
+### var added_episode_alert
+
+This variable tells the script if you want to get emailed every time a new
+episode is added to your calendar. It will give you the name of the show, and
+the start date and time of that episode. All additions for that execution of the
+script will be in the same email.
+
+#### Default
+
+The default setting is `false`.
+
+#### Possible Values:
+
+`var calendar_id = true` means that you want to get the emails.
+every execution of the script.
+
+`var calendar_id = false` means that you do NOT want to get the emails.
+
 ## Questions
 
 ### What if I Accidentally mess with the data in the sheet?

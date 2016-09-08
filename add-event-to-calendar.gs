@@ -5,10 +5,11 @@
 // For a sheet with
 // URL = https://docs.google.com/spreadsheets/d/1RSklW9SKI535TG0LnH9cjU2c3spLtnbPBAKWahUWO7I/edit#gid=0
 // Change these variables variable
-var spreadsheet_id = "FILL THIS"
-var get_status_change_alert = true
-var calendar_id = ""
-var debug = false
+var spreadsheet_id = "FILL THIS";
+var get_status_change_alert = false;
+var calendar_id = "";
+var debug = false;
+var added_episode_alert = false;
 
 
 var month = new Array();
@@ -135,10 +136,26 @@ function email_error_about_no_airstamp(showname, episode_num) {
   MailApp.sendEmail(recipient, subject, body);
 }
 
+function email_alert_for_added_episodes(arr) {
+  var size = arr.length;
+  if (size >= 1) {
+    var body = "";
+    for (k = 0; k < size; k++) {
+      body = body + "\n" + arr[k];
+    }
+    var subject = "Automated Message: TV Shows Added to Calendar"
+    var recipient = Session.getActiveUser().getEmail();
+    MailApp.sendEmail(recipient, subject, body);
+  }
+
+}
+
 function run() {
   var sheet = SpreadsheetApp.openById(spreadsheet_id).getSheets()[0];
   var sheet_data = sheet.getDataRange().getValues();
   var lastrow = sheet.getDataRange().getLastRow();
+
+  var episodes_added_to_calendar = new Array();
 
   for (k = 0; k < lastrow; k++) {
     var currentshow = k;
@@ -212,12 +229,17 @@ function run() {
       }
       airdate = getAirdate(data, number_of_episodes_we_know);
       add_show_to_calendar(data['name'], airdate);
+      episodes_added_to_calendar.push(data['name'] + ": " + airdate[0]);
       number_of_episodes_we_know++;
     }
 
     //set number_of_episodes_we_know in the sheet
     sheet.getRange(currentshow_base1, 2).setValue(number_of_episodes_we_know);
     Logger.log("==============================");
+  }
+
+  if (added_episode_alert == true) {
+    email_alert_for_added_episodes(episodes_added_to_calendar);
   }
 
   if (debug == true) {
