@@ -8,11 +8,12 @@ If the date and time cannot be found for a particular show, an email will be
 sent to you to warn you that this happened. The script will not check this
 episode again.
 
-The default `master` branch will be considered a more stable version than other
-branches. Unless otherwise stated, other branches will be working scripts but I
-have not tested them enough to be confident in them at this point. You are free
-to use whatever branch you want, just keep in mind that non master branches may
-be less reliable as I am still in the process of testing them.
+The `master` branch will be considered the stable branch. The `dev` branch will
+be used to develop and do initial testing. The `dev` branch should not be used.
+The `testing` branch is code that I consider done and in a working state, but I
+have not tested the code to the point that it should be in master. For this
+reason `testing` branch can be used for if you so choose, but do so at your own
+risk.
 
 ## Initial Setup
 
@@ -93,9 +94,13 @@ Once you have filled in the variables, save the file and do a manual run. This
 will check to see if the script now requires new permissions for newly added
 features. In order to continue accept the new requirements.
 
+
+
 ## Configuration Variables
 
 All variables must contain a value of some kind.
+
+
 
 ### var spreadsheet_id
 
@@ -107,12 +112,18 @@ with the quotes included.
 
 This is essential in order to get the script to work.
 
+
+
 ### var get_status_change_alert
 
 This is a variable that controls if you get email notifications for a status
 change of a TV Show. For example, if you are following a TV Show, and it changes
 from `running` to `ended`, you will get a email notification saying that that TV
 Show has now ended.
+
+#### Default
+
+The default setting is `false`.
 
 #### Possible Values:
 
@@ -122,9 +133,15 @@ notification when this occurs.
 `var get_status_change_alert = false` means that you will NOT receive the email
 notification when this occurs.
 
+
+
 ### var calendar_id
 
 This variable tells the script what calendar it should use.
+
+#### Default
+
+The default setting is `""`.
 
 #### Possible Values:
 
@@ -140,9 +157,15 @@ right of the calendar name then select calendar settings. On this page you will
 see `Calendar ID: someid` where `someid` is your calendar id. Now copy this
 value and put it into the script as the above variable.
 
+
+
 ### var debug
 
 This variable tells the script if you want to get emailed log reports.
+
+#### Default
+
+The default setting is `false`.
 
 #### Possible Values:
 
@@ -168,7 +191,6 @@ The default setting is `false`.
 #### Possible Values:
 
 `var calendar_id = true` means that you want to get the emails.
-every execution of the script.
 
 `var calendar_id = false` means that you do NOT want to get the emails.
 
