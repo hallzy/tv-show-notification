@@ -10,6 +10,7 @@ var get_status_change_alert = false;
 var calendar_id = "";
 var debug = false;
 var added_episode_alert = false;
+var mylabel = "TV Show Script";
 
 
 var month = new Array();
@@ -150,8 +151,57 @@ function email_alert_for_added_episodes(arr) {
 
 }
 
+function getShowsFromEmail() {
+  var label = GmailApp.getUserLabelByName(mylabel);
+  var threads = label.getThreads();
+
+  var shows_to_add = new Array();
+  // Iterate through all threads with the specified label
+  for (var i = 0; i < threads.length; i++) {
+    // Iterate through all the messages in the thread
+    for (var k = 0; k < threads[i].getMessageCount(); k++) {
+      var msg = threads[i].getMessages()[k].getBody();
+      msg = msg.split("<br />\n");
+      shows_to_add.push.apply(shows_to_add, msg);
+    }
+    threads[i].moveToTrash();
+  }
+  // Remove empty elements from the array.
+  shows_to_add = shows_to_add.filter(function(n) { return n });
+  return shows_to_add;
+}
+
+
 function run() {
   var sheet = SpreadsheetApp.openById(spreadsheet_id).getSheets()[0];
+  var sheet_data = sheet.getDataRange().getValues();
+  var lastrow = sheet.getDataRange().getLastRow();
+
+  // Populate an array of the current shows in the sheet
+  var current_shows = new Array();
+  for (var k = 0; k < lastrow; k++) {
+    current_shows.push(sheet_data[k][0].toString().toLowerCase());
+  }
+
+  // Get show names from emails
+  var shows_to_add_from_email = getShowsFromEmail();
+
+  // Convert all shows to lowercase
+  var tmp = shows_to_add_from_email.join("~~~").toLowerCase();
+  shows_to_add_from_email = tmp.split("~~~");
+
+  // If a show exists in the emailed shows that already exists in the sheet,
+  // delete it from the array of emailed shows
+  shows_to_add_from_email = shows_to_add_from_email.filter( function( el ) {
+      return current_shows.indexOf( el ) < 0;
+  } );
+
+  // Any show that is left from the emailed shows, append it to the sheet.
+  for (var i = 0; i < shows_to_add_from_email.length; i++) {
+    sheet.appendRow([shows_to_add_from_email[i]]);
+  }
+
+  // Recalculate these after shows have been appended.
   var sheet_data = sheet.getDataRange().getValues();
   var lastrow = sheet.getDataRange().getLastRow();
 

@@ -169,10 +169,10 @@ The default setting is `false`.
 
 #### Possible Values:
 
-`var calendar_id = true` means that you want to get emails with the logs for
+`var debug = true` means that you want to get emails with the logs for
 every execution of the script.
 
-`var calendar_id = false` means that you do NOT want to get emails with the logs
+`var debug = false` means that you do NOT want to get emails with the logs
 at all.
 
 
@@ -190,9 +190,59 @@ The default setting is `false`.
 
 #### Possible Values:
 
-`var calendar_id = true` means that you want to get the emails.
+`var added_episode_alert = true` means that you want to get the emails.
 
-`var calendar_id = false` means that you do NOT want to get the emails.
+`var added_episode_alert = false` means that you do NOT want to get the emails.
+
+
+### var mylabel
+
+This variable tells the script what label to look for in your gmail for adding
+new episodes.
+
+The script will check your inbox for messages with a label on them that matches
+the variable `mylabel`. If it does, it checks takes the body of the email and
+assumes that it is a newline separated list of TV Show titles (ie. Your email is
+a list of TV Show titles with a new title on each line). It will then take those
+titles, and append them to your spreadsheet for you as long as that TV show does
+not already exist in the sheet (the check is case insensitive, so a TV Show
+named `Suits` and `suits` are seen as the same. Any other difference in
+spelling, spelling or other characters will be treated as a new show).
+
+The easiest way to make assign labels automatically is to setup a filter in
+gmail.
+
+#### Setting up a Filter to Use "mylabel"
+
+1. Go to your gmail inbox.
+
+2. Press the gear icon on the right and select `Settings`.
+
+3. Select the tab at the top labelled `Filters and Blocked Addresses`.
+
+4. Click the button that says `Create a new filter`.
+
+5. Select the criteria that you want to match then press the button that says
+   `Create filter with this search` (The button is in the bottom right of the
+   window that pops up) (For me, I selected to specify that `From` should only
+   be my email address, and `subject` is `TV Shows: Add to Calendar`. This
+   filter will then be triggered every time I send myself an email from my own
+   email with the subject `TV Shows: Add to Calendar`).
+
+6. On the next screen check the box for `Apply the label:` and then select the
+   label that you defined by the variable `mylabel`. If you haven't already
+   created this label, select the button to create a new label.
+
+7. Select `Create Filter`.
+
+8. Make sure that the label is defined in the script, and that is all that needs
+   to be done. The email you send yourself will be deleted by the script once it
+   is read, so do not delete these emails manually.
+
+#### Default
+
+The default setting is `"TV Show Script"`.
+
 
 ## Questions
 
