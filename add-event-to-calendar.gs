@@ -196,6 +196,8 @@ function run() {
       return current_shows.indexOf( el ) < 0;
   } );
 
+  Logger.log(shows_to_add_from_email);
+
   // Any show that is left from the emailed shows, append it to the sheet.
   for (var i = 0; i < shows_to_add_from_email.length; i++) {
     sheet.appendRow([shows_to_add_from_email[i]]);
@@ -222,7 +224,25 @@ function run() {
 
     var url = getURL(showname_url);
 
-    var response = UrlFetchApp.fetch(url);
+    // If we fail to get a response, send off some logs and exit
+    try {
+      var exit_now = false;
+      var response = UrlFetchApp.fetch(url);
+    }
+    catch(e) {
+      exit_now = true;
+      throw e;
+    }
+    finally {
+      if (exit_now == true) {
+        if (added_episode_alert == true) {
+          email_alert_for_added_episodes(episodes_added_to_calendar);
+        }
+        Logger.log("Error Fetching data from TV Maze");
+        email_log();
+      }
+    }
+
     var json_string = response.getContentText();
     var data = JSON.parse(json_string);
     var episodes = data['_embedded']['episodes'];
