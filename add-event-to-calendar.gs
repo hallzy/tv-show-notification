@@ -60,6 +60,13 @@ function email_log() {
   MailApp.sendEmail(recipient, subject, body);
 }
 
+function email_error(e) {
+  var body = "Error at: " + e.lineNumber + ": " + e.message;
+  var subject = "TV Show Script: Error"
+  var recipient = Session.getActiveUser().getEmail();
+  MailApp.sendEmail(recipient, subject, body);
+}
+
 function get_number_of_episodes(data) {
   var num = data['_embedded']['episodes'].length;
   Logger.log("Number of episodes: " + num);
@@ -190,6 +197,7 @@ function run() {
   var tmp = shows_to_add_from_email.join("~~~").toLowerCase();
   shows_to_add_from_email = tmp.split("~~~");
 
+
   // If a show exists in the emailed shows that already exists in the sheet,
   // delete it from the array of emailed shows
   shows_to_add_from_email = shows_to_add_from_email.filter( function( el ) {
@@ -225,22 +233,25 @@ function run() {
     var url = getURL(showname_url);
 
     // If we fail to get a response, send off some logs and exit
+    var exit_now = false;
     try {
-      var exit_now = false;
       var response = UrlFetchApp.fetch(url);
     }
     catch(e) {
       exit_now = true;
-      throw e;
+      var err = e;
     }
-    finally {
-      if (exit_now == true) {
-        if (added_episode_alert == true) {
-          email_alert_for_added_episodes(episodes_added_to_calendar);
-        }
-        Logger.log("Error Fetching data from TV Maze");
+
+    if (exit_now == true) {
+      if (added_episode_alert == true) {
+        email_alert_for_added_episodes(episodes_added_to_calendar);
+      }
+      if (debug == true) {
         email_log();
       }
+
+      email_error(err);
+      throw err;
     }
 
     var json_string = response.getContentText();
@@ -317,4 +328,5 @@ function run() {
   }
 
 }
+
 
