@@ -210,18 +210,21 @@ function check_for_updates() {
   newhash = newhash[1];
 
   // Get the previsously saved hash from the cache.
-  var oldhash = CacheService.getScriptCache().get("hash");
+  var cache = CacheService.getScriptCache();
+  var oldhash = cache.get("hash");
+
+  Logger.log("Old hash is: " + oldhash);
 
   // if no oldhash exists, then this is the first time we have run this update.
   // So we will just update the cache silently
   if (oldhash == null) {
-    CacheService.getScriptCache().put("hash", newhash);
-    Logger.log("hash is now: " + newhash);
+    cache.put("hash", newhash);
+    Logger.log("hash is initialized to: " + newhash);
   }
   // if the old hash and new hash don't agree, then assume that means that the
   // script has been updated, and store newhash in the cache
   else if (newhash != oldhash) {
-    CacheService.getScriptCache().put("hash", newhash);
+    cache.put("hash", newhash);
     Logger.log("hash is now: " + newhash);
     email_alert_for_script_update(newhash, oldhash);
   }
