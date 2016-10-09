@@ -11,6 +11,8 @@ var calendar_id = "";
 var debug = false;
 var added_episode_alert = false;
 var mylabel = "TV Show Script";
+var branch_to_check_for_updates = "master";
+var auto_update_check = true;
 
 
 var month = new Array();
@@ -178,11 +180,62 @@ function getShowsFromEmail() {
   return shows_to_add;
 }
 
+function email_alert_for_script_update(newhash, oldhash) {
+  var body = "An update has been made to the script.";
+  body = body + "\n\n";
+  body = body + "Check \"https://github.com/hallzy/tv-show-notification\"";
+  body = body + "\n\n";
+  body = body + "The last time an update check was made the current commit ";
+  body = body + "hash was \"" + oldhash + "\"";
+  body = body + "\n\n";
+  body = body + "Now the current hash is \"" + newhash + "\"";
+  var subject = "Automated Message: TV Shows Script Ready for Update"
+  var recipient = Session.getActiveUser().getEmail();
+  MailApp.sendEmail(recipient, subject, body);
+}
+
+function check_for_updates() {
+  // Get the URL to check. This will be the github page with the list of commits
+  // for the specified branch
+  var url = "https://github.com/hallzy/tv-show-notification/commits/";
+  url = url + branch_to_check_for_updates;
+
+  // Get the page as a string
+  var response = UrlFetchApp.fetch(url).getContentText();
+
+  // Search for this regex to get the latest hash - Only use index 1 for this.
+  // Index 0 is the whole match, while index 1 is just the part that is matched
+  // by the part in parenthesis
+  var newhash = response.match(/data-clipboard-text="(.*)" data-copied-hint/);
+  newhash = newhash[1];
+
+  // Get the previsously saved hash from the cache.
+  var oldhash = CacheService.getScriptCache().get("hash");
+
+  // if no oldhash exists, then this is the first time we have run this update.
+  // So we will just update the cache silently
+  if (oldhash == null) {
+    CacheService.getScriptCache().put("hash", newhash);
+    Logger.log("hash is now: " + newhash);
+  }
+  // if the old hash and new hash don't agree, then assume that means that the
+  // script has been updated, and store newhash in the cache
+  else if (newhash != oldhash) {
+    CacheService.getScriptCache().put("hash", newhash);
+    Logger.log("hash is now: " + newhash);
+    email_alert_for_script_update(newhash, oldhash);
+  }
+}
+
 
 function run() {
   var sheet = SpreadsheetApp.openById(spreadsheet_id).getSheets()[0];
   var sheet_data = sheet.getDataRange().getValues();
   var lastrow = sheet.getDataRange().getLastRow();
+
+  if (auto_update_check == true) {
+    check_for_updates();
+  }
 
   // Populate an array of the current shows in the sheet
   var current_shows = new Array();

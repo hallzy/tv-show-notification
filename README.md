@@ -244,6 +244,48 @@ gmail.
 The default setting is `"TV Show Script"`.
 
 
+### var branch_to_check_for_updates
+
+This variable tells the script what branch to check for updates. It will use
+this to see if any new commits have come in since the last time the update
+function was run.
+
+#### Default
+
+The default setting is `"master"`.
+
+#### Possible Values:
+
+`var branch_to_check_for_updates = "master"`
+
+`var branch_to_check_for_updates = "testing"`
+
+`var branch_to_check_for_updates = "dev"`
+
+
+### var auto_update_check
+
+This variable tells the script if you want the update function to run
+automatically when you run your script. When the update script is run you will
+get a email if an update has happened since the last time the script ran. You
+will not receive an email at any other time.
+
+Note that this will **NOT** update the script. It will just warn you of updates
+that have occurred.
+
+#### Default
+
+The default setting is `true`.
+
+#### Possible Values:
+
+`var auto_update_check = true` Means to check for updates automatically before
+looking for TV Shows.
+
+`var auto_update_check = false` Means that the script will never automatically
+check for updates for you. So you will need to manually run the
+`check_for_updates` function in order to get updates.
+
 ## Questions
 
 ### What if I Accidentally mess with the data in the sheet?
