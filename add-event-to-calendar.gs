@@ -354,11 +354,51 @@ function run() {
       }
     }
 
+
+    // Get the null stamps from the spreadsheet
+    var episodes_with_null_stamps = new Array();
+    if (sheet.getRange(currentshow_base1, 4).isBlank()) {
+      var json_null_stamped_episodes = {};
+    }
+    else {
+      var json_null_stamped_episodes = JSON.parse(sheet.getRange(currentshow_base1, 4).getValue());
+    }
+
+    var episodes_with_null_stamps = [];
+
+    for (var x in json_null_stamped_episodes) {
+      episodes_with_null_stamps.push(json_null_stamped_episodes[x]);
+    }
+
+    Logger.log("Episodes with null stamps: " + episodes_with_null_stamps);
+    var indices_to_remove = new Array();
+    for (var i = 0; i < episodes_with_null_stamps.length; i++) {
+      var episode = episodes_with_null_stamps[i];
+      var stamp = episodes[episode]['airstamp'];
+      // If a show is no longer null, then I want it added to the calendar, so long as it is still a future event
+      if (stamp != null && stamp != "") {
+        indices_to_remove.push(i);
+        airdate = getAirdate(data, episode);
+        if (airdate[1] > new Date()) {
+          add_show_to_calendar(data['name'], airdate);
+          episodes_added_to_calendar.push(data['name'] + ": " + airdate[0]);
+        }
+      }
+    }
+
+    for (var i = 0; i < indices_to_remove.length; i++) {
+      episodes_with_null_stamps.splice(indices_to_remove[i], 1);
+    }
+
+
+
+
     // if this happens, we need to add them to calendar
     while (num_episodes > number_of_episodes_we_know) {
       var no_stamp = false;
       var stamp = episodes[number_of_episodes_we_know]['airstamp'];
       if (stamp == null || stamp == "") {
+        episodes_with_null_stamps.push(number_of_episodes_we_know);
         number_of_episodes_we_know++;
         Logger.log(showname);
         email_error_about_no_airstamp(showname, number_of_episodes_we_know)
@@ -369,6 +409,9 @@ function run() {
       episodes_added_to_calendar.push(data['name'] + ": " + airdate[0]);
       number_of_episodes_we_know++;
     }
+
+    var myJsonString = JSON.stringify(episodes_with_null_stamps);
+    sheet.getRange(currentshow_base1, 4).setValue(myJsonString);
 
     //set number_of_episodes_we_know in the sheet
     sheet.getRange(currentshow_base1, 2).setValue(number_of_episodes_we_know);

@@ -5,8 +5,12 @@ calendar events in your Google Calendar for air dates of your favourite TV
 Shows. The script will find the time of day the show airs as well.
 
 If the date and time cannot be found for a particular show, an email will be
-sent to you to warn you that this happened. The script will not check this
-episode again.
+sent to you to warn you that this happened. A list of the episodes that have
+been found to be null will be held in the fourth column of the spreadsheet. The
+script will continue to check these episodes until the script removes them
+(which only happens when a time stamp has been found for it). You may choose to
+remove them yourself by manually editing the cells if you feel the need to do
+so.
 
 The `master` branch will be considered the stable branch. The `dev` branch will
 be used to develop and do initial testing. The `dev` branch should not be used.
