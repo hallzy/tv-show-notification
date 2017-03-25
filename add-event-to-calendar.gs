@@ -118,6 +118,17 @@ function email_alert_for_script_update(newhash, oldhash) {
   var e = new Email(subject, body);
   e.Send();
 }
+
+function email_error_about_the_reset(showname, sheet_number_episodes, num_episodes) {
+  var body = "\"" + showname + "\"" + " is showing " + num_episodes;
+  body = body + " episodes, but the script has logged ";
+  body = body + sheet_number_episodes + ". This TV show will be reset.";
+  body = body + " This may cause duplicate entries in your calendar to exist";
+  body = body + " for this tv show.";
+  var subject = "Automated Message: TV Show is Being Auto-Reinitialized"
+  var e = new Email(subject, body);
+  e.Send();
+}
 //}}}
 
 var idx = 0;
@@ -261,6 +272,17 @@ function check_for_updates() {
   }
 }
 
+function reset_tv_show(currentshow) {
+  var sheet = SpreadsheetApp.openById(spreadsheet_id).getSheets()[0];
+
+  // Reset the number of episodes
+  sheet.getRange(currentshow + 1, 2).setValue("");
+  // Reset the Status of the episodes
+  sheet.getRange(currentshow + 1, 3).setValue("");
+  // Reset the null column
+  sheet.getRange(currentshow + 1, 4).setValue("");
+}
+
 function addEmailedShowsToSheet(sheet) {
   // Populate an array of the current shows in the sheet
   var current_shows = new Array();
@@ -349,14 +371,16 @@ function run() {
   }
 
   addEmailedShowsToSheet(sheet);
-  // Repopulate sheet after adding shows from email
-  sheet.Update();
 
   var episodes_added_to_calendar = new Array();
 
   // Iterate through every tv show
   for (k = 0; k < sheet.getLastRow; k++) {
     var currentshow_index = k;
+
+    // Repopulate the sheet after adding emailed shows to the sheet. Also,
+    // execute this when we come back through the loop for rechecking shows.
+    sheet.Update();
 
     var showname = sheet.getShowName(currentshow_index).toString();
     Logger.log("==============================");
@@ -396,6 +420,17 @@ function run() {
     var api_episodes = api['_embedded']['episodes'];
     var api_num_episodes = get_number_of_episodes(api);
 
+    if (api_num_episodes < sheet_num_episodes) {
+      // If we know of more episodes than what exist, something weird has
+      // happened. We should reset the show
+      reset_tv_show(currentshow_index);
+      email_error_about_the_reset(showname, sheet_num_episodes, api_num_episodes);
+
+      // Now re loop for this show to make sure we do not miss anything.
+      k--;
+      continue;
+    }
+
     if (get_status_change_alert == true) {
       var show_status_sheet = undefined;
       var show_status_sheet = sheet.getShowStatus(currentshow_index);
@@ -407,7 +442,6 @@ function run() {
       show_status_sheet = show_status_api;
       sheet.setStatus(currentshow_index, show_status_sheet);
     }
-
 
     // If we don't have a number, create it. The number will be the number of
     // episodes that are before todays date
@@ -462,7 +496,8 @@ function run() {
     for (var i = 0; i < episodes_with_null_stamps.length; i++) {
       var episode = episodes_with_null_stamps[i];
       var stamp = api_episodes[episode]['airstamp'];
-      // If a show is no longer null, then I want it added to the calendar, so long as it is still a future event
+      // If a show is no longer null, then I want it added to the calendar, so
+      // long as it is still a future event
       if (stamp != null && stamp != "") {
         indices_to_remove.push(i);
         var airTime = getAirdate(api, episode);
