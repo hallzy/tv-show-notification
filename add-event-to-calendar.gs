@@ -14,23 +14,114 @@ var mylabel = "TV Show Script";
 var branch_to_check_for_updates = "master";
 var auto_update_check = true;
 
+var TESTING = false;
 
 var month = new Array();
-month[0] = "January";
-month[1] = "February";
-month[2] = "March";
-month[3] = "April";
-month[4] = "May";
-month[5] = "June";
-month[6] = "July";
-month[7] = "August";
-month[8] = "September";
-month[9] = "October";
+month[0]  = "January";
+month[1]  = "February";
+month[2]  = "March";
+month[3]  = "April";
+month[4]  = "May";
+month[5]  = "June";
+month[6]  = "July";
+month[7]  = "August";
+month[8]  = "September";
+month[9]  = "October";
 month[10] = "November";
 month[11] = "December";
 
+
+// Email Related classes and functions//{{{
+
+// Email class.
+function Email(subject, body) {
+  this.body = body;
+  this.subject = subject;
+  this.recipient = Session.getActiveUser().getEmail();
+  this.Send = function() {
+    // If we are testing, don't send an email. Just log a message
+    if (!TESTING) {
+      MailApp.sendEmail(this.recipient, this.subject, this.body);
+    }
+    else {
+      var log = "Testing Mode: Email = recipient: " + this.recipient;
+      log = log + ", subject: " + this.subject + ", body: ";
+      log = log + this.body;
+      Logger.log(log);
+    }
+  };
+}
+
+function email_log() {
+  var e = new Email();
+  e.body = Logger.getLog();
+  e.subject = "TV Show Script: Execution Log"
+  e.Send();
+}
+
+function email_error(err) {
+  var e = new Email();
+  e.body = "Error at: " + err.lineNumber + ": " + err.message;
+  e.subject = "TV Show Script: Error"
+  e.Send();
+}
+
+function email_status_change(showname, old_val, new_val) {
+  if (old_val == "" || old_val == null) {
+    var body = "The status of \"" + showname + "\" has initialized to \"";
+    body = body + new_val + "\".";
+  }
+  else {
+    var body = "The status of \"" + showname + "\" has changed from \"";
+    body = body + old_val + "\" to \"" + new_val + "\".";
+  }
+  var subject = "Automated Message: TV Show Status Change"
+
+  var e = new Email(subject, body);
+  e.Send();
+}
+
+function email_error_about_no_airstamp(showname, episode_num) {
+  var body = "\"" + showname + "\"" + " episode #" + episode_num;
+  body = body + " contains no information about the airdate. This episode was";
+  body = body + " not automatically added to your calendar";
+  var subject = "Automated Message: TV Show Not Added to Calendar"
+
+  var e = new Email(subject, body);
+  e.Send();
+}
+
+function email_alert_for_added_episodes(arr) {
+  var size = arr.length;
+  if (size >= 1) {
+    var body = "";
+    for (k = 0; k < size; k++) {
+      body = body + "\n" + arr[k];
+    }
+    var subject = "Automated Message: TV Shows Added to Calendar"
+    var e = new Email(subject, body);
+    e.Send();
+  }
+
+}
+
+function email_alert_for_script_update(newhash, oldhash) {
+  var body = "An update has been made to the script.";
+  body = body + "\n\n";
+  body = body + "Check \"https://github.com/hallzy/tv-show-notification\"";
+  body = body + "\n\n";
+  body = body + "The last time an update check was made the current commit ";
+  body = body + "hash was \"" + oldhash + "\"";
+  body = body + "\n\n";
+  body = body + "Now the current hash is \"" + newhash + "\"";
+  var subject = "Automated Message: TV Shows Script Ready for Update"
+  var e = new Email(subject, body);
+  e.Send();
+}
+//}}}
+
 var idx = 0;
-function add_show_to_calendar(title, date) {
+function add_show_to_calendar(title, start, end) {
   // If we are adding more than 10 calendar events at a time, wait for 3 seconds
   // otherwise google will complain.
   if (idx >= 10) {
@@ -51,38 +142,29 @@ function add_show_to_calendar(title, date) {
     Logger.log("Using calendar: " + calendar_id)
     var myCalendar = CalendarApp.getCalendarById(calendar_id)
   }
-  myCalendar.createEvent(title, date[0], date[1]);
-  Logger.log("Added Event: " + title + ", " + date[0] + " to " + date[1]);
+
+  // if We are testing do not create an event. Just log it
+  if (!TESTING) {
+    myCalendar.createEvent(title, start, end);
+  }
+  Logger.log("Added Event: " + title + ", " + start + " to " + end);
 }
 
-function email_log() {
-  var body = Logger.getLog();
-  var subject = "TV Show Script: Execution Log"
-  var recipient = Session.getActiveUser().getEmail();
-  MailApp.sendEmail(recipient, subject, body);
-}
-
-function email_error(e) {
-  var body = "Error at: " + e.lineNumber + ": " + e.message;
-  var subject = "TV Show Script: Error"
-  var recipient = Session.getActiveUser().getEmail();
-  MailApp.sendEmail(recipient, subject, body);
-}
-
-function get_number_of_episodes(data) {
-  var num = data['_embedded']['episodes'].length;
+// Retrive sthe number of episodes for a tv show from the API
+function get_number_of_episodes(api) {
+  var num = api['_embedded']['episodes'].length;
   Logger.log("Number of episodes: " + num);
   return num;
 }
 
-function get_show_status(data) {
-  Logger.log("status: " + data['status']);
-  return data['status'];
+function get_show_status(api) {
+  Logger.log("status: " + api['status']);
+  return api['status'];
 }
 
-function getAirdate(data, episode_num) {
-  var dateStr = data['_embedded']['episodes'][episode_num]['airstamp'];
-  var runtime = data['_embedded']['episodes'][episode_num]['runtime'];
+function getAirdate(api, episode_num) {
+  var dateStr = api['_embedded']['episodes'][episode_num]['airstamp'];
+  var runtime = api['_embedded']['episodes'][episode_num]['runtime'];
   Logger.log("AirStamp " + dateStr);
   Logger.log("Runtime " + runtime);
 
@@ -123,43 +205,6 @@ function getURL(name) {
 
 }
 
-function email_status_change(showname, old_val, new_val) {
-  if (old_val == "" || old_val == null) {
-    var body = "The status of \"" + showname + "\" has initialized to \"";
-    body = body + new_val + "\".";
-  }
-  else {
-    var body = "The status of \"" + showname + "\" has changed from \"";
-    body = body + old_val + "\" to \"" + new_val + "\".";
-  }
-  var subject = "Automated Message: TV Show Status Change"
-  var recipient = Session.getActiveUser().getEmail();
-  MailApp.sendEmail(recipient, subject, body);
-}
-
-function email_error_about_no_airstamp(showname, episode_num) {
-  var body = "\"" + showname + "\"" + " episode #" + episode_num;
-  body = body + " contains no information about the airdate. This episode was";
-  body = body + " not automatically added to your calendar";
-  var subject = "Automated Message: TV Show Not Added to Calendar"
-  var recipient = Session.getActiveUser().getEmail();
-  MailApp.sendEmail(recipient, subject, body);
-}
-
-function email_alert_for_added_episodes(arr) {
-  var size = arr.length;
-  if (size >= 1) {
-    var body = "";
-    for (k = 0; k < size; k++) {
-      body = body + "\n" + arr[k];
-    }
-    var subject = "Automated Message: TV Shows Added to Calendar"
-    var recipient = Session.getActiveUser().getEmail();
-    MailApp.sendEmail(recipient, subject, body);
-  }
-
-}
-
 function getShowsFromEmail() {
   var label = GmailApp.getUserLabelByName(mylabel);
   var threads = label.getThreads();
@@ -178,20 +223,6 @@ function getShowsFromEmail() {
   // Remove empty elements from the array.
   shows_to_add = shows_to_add.filter(function(n) { return n });
   return shows_to_add;
-}
-
-function email_alert_for_script_update(newhash, oldhash) {
-  var body = "An update has been made to the script.";
-  body = body + "\n\n";
-  body = body + "Check \"https://github.com/hallzy/tv-show-notification\"";
-  body = body + "\n\n";
-  body = body + "The last time an update check was made the current commit ";
-  body = body + "hash was \"" + oldhash + "\"";
-  body = body + "\n\n";
-  body = body + "Now the current hash is \"" + newhash + "\"";
-  var subject = "Automated Message: TV Shows Script Ready for Update"
-  var recipient = Session.getActiveUser().getEmail();
-  MailApp.sendEmail(recipient, subject, body);
 }
 
 function check_for_updates() {
@@ -230,20 +261,11 @@ function check_for_updates() {
   }
 }
 
-
-function run() {
-  var sheet = SpreadsheetApp.openById(spreadsheet_id).getSheets()[0];
-  var sheet_data = sheet.getDataRange().getValues();
-  var lastrow = sheet.getDataRange().getLastRow();
-
-  if (auto_update_check == true) {
-    check_for_updates();
-  }
-
+function addEmailedShowsToSheet(sheet) {
   // Populate an array of the current shows in the sheet
   var current_shows = new Array();
-  for (var k = 0; k < lastrow; k++) {
-    current_shows.push(sheet_data[k][0].toString().toLowerCase());
+  for (var k = 0; k < sheet.getLastRow; k++) {
+    current_shows.push(sheet.getShowName(k).toString().toLowerCase());
   }
 
   // Get show names from emails
@@ -253,40 +275,98 @@ function run() {
   var tmp = shows_to_add_from_email.join("~~~").toLowerCase();
   shows_to_add_from_email = tmp.split("~~~");
 
-
   // If a show exists in the emailed shows that already exists in the sheet,
   // delete it from the array of emailed shows
   shows_to_add_from_email = shows_to_add_from_email.filter( function( el ) {
-      return current_shows.indexOf( el ) < 0;
+    return current_shows.indexOf( el ) < 0;
   } );
 
   Logger.log(shows_to_add_from_email);
 
   // Any show that is left from the emailed shows, append it to the sheet.
   for (var i = 0; i < shows_to_add_from_email.length; i++) {
-    sheet.appendRow([shows_to_add_from_email[i]]);
+    sheet.appendShow(shows_to_add_from_email[i]);
+  }
+}
+
+
+// Google Sheet Class//{{{
+function GoogleSheet() {
+  this.base       = SpreadsheetApp.openById(spreadsheet_id).getSheets()[0];
+  this.getData    = this.base.getDataRange().getValues();
+  this.getLastRow = this.base.getDataRange().getLastRow();
+
+  this.getShowName = function(index) {
+    return this.getData[index][0];
+  };
+
+  this.getNumberOfEpisodes = function(index) {
+    return this.getData[index][1];
+  };
+
+  this.getShowStatus = function(index) {
+    return this.getData[index][2];
+  };
+
+  this.isNullColumnBlank = function(show) {
+    return this.base.getRange(show+1, 4).isBlank();
+  };
+
+  this.getNullColumn = function(show) {
+    return this.base.getRange(show+1, 4).getValue();
+  };
+
+  this.setNullColumn = function(show, string) {
+    this.base.getRange(show+1, 4).setValue(string);
+  };
+
+  this.appendShow = function(showname) {
+    this.base.appendRow([showname]);
+  };
+
+  this.setStatus = function(show, show_status) {
+    this.base.getRange(show+1, 3).setValue(show_status);
+  };
+
+  this.setNumberOfEpisodes = function(show, value) {
+    this.base.getRange(show+1, 2).setValue(value);
+  };
+
+  this.Update = function() {
+    this.base       = SpreadsheetApp.openById(spreadsheet_id).getSheets()[0];
+    this.getData    = this.base.getDataRange().getValues();
+    this.getLastRow = this.base.getDataRange().getLastRow();
+  };
+}
+//}}}
+
+function run() {
+  // Get the google sheet with tv show data
+  var sheet = new GoogleSheet();
+
+  if (auto_update_check == true) {
+    check_for_updates();
   }
 
-  // Recalculate these after shows have been appended.
-  var sheet_data = sheet.getDataRange().getValues();
-  var lastrow = sheet.getDataRange().getLastRow();
+  addEmailedShowsToSheet(sheet);
+  // Repopulate sheet after adding shows from email
+  sheet.Update();
 
   var episodes_added_to_calendar = new Array();
 
-  for (k = 0; k < lastrow; k++) {
-    var currentshow = k;
-    var currentshow_base1 = currentshow+1;
+  // Iterate through every tv show
+  for (k = 0; k < sheet.getLastRow; k++) {
+    var currentshow_index = k;
 
-    var showname = sheet_data[currentshow][0].toString()
+    var showname = sheet.getShowName(currentshow_index).toString();
     Logger.log("==============================");
     Logger.log("Show Name: " + showname);
     Logger.log("Show Index: " + k);
-    var showname_url = showname.toLowerCase();
-    //sheet_data[row][column] -- ie B1 = sheet_data[0][1]
-    var number_of_episodes_we_know = undefined;
-    var number_of_episodes_we_know = sheet_data[currentshow][1];
+    var sheet_num_episodes = undefined;
+    var sheet_num_episodes = sheet.getNumberOfEpisodes(currentshow_index);
 
-    var url = getURL(showname_url);
+    // get the api url for the current show
+    var url = getURL(showname.toLowerCase());
 
     // If we fail to get a response, send off some logs and exit
     var exit_now = false;
@@ -310,45 +390,47 @@ function run() {
       throw err;
     }
 
+    // Get the tv show data from the API
     var json_string = response.getContentText();
-    var data = JSON.parse(json_string);
-    var episodes = data['_embedded']['episodes'];
-
-    var num_episodes = get_number_of_episodes(data);
+    var api = JSON.parse(json_string);
+    var api_episodes = api['_embedded']['episodes'];
+    var api_num_episodes = get_number_of_episodes(api);
 
     if (get_status_change_alert == true) {
       var show_status_sheet = undefined;
-      var show_status_sheet = sheet_data[currentshow][2];
-      var show_status_current = get_show_status(data);
+      var show_status_sheet = sheet.getShowStatus(currentshow_index);
+      var show_status_api = get_show_status(api);
 
-      // This is the first time we are checking for the status of the show
-      if (show_status_sheet == null) {
-        show_status_sheet = show_status_current;
-        sheet.getRange(currentshow_base1, 3).setValue(show_status_sheet);
+      if (show_status_sheet != show_status_api) {
+        email_status_change(showname, show_status_sheet, show_status_api);
       }
-      else if (show_status_sheet != show_status_current) {
-        email_status_change(showname, show_status_sheet, show_status_current);
-        show_status_sheet = show_status_current;
-        sheet.getRange(currentshow_base1, 3).setValue(show_status_sheet);
-      }
+      show_status_sheet = show_status_api;
+      sheet.setStatus(currentshow_index, show_status_sheet);
     }
 
 
     // If we don't have a number, create it. The number will be the number of
     // episodes that are before todays date
-    if (number_of_episodes_we_know == null || number_of_episodes_we_know == "") {
+    if (sheet_num_episodes == null || sheet_num_episodes == "") {
       var now = new Date();
 
-      number_of_episodes_we_know = 0;
-      for (var i = num_episodes-1; i >= 0; i--) {
+      sheet_num_episodes = 0;
+      // Iterate through every episode of the current tv show, starting from the
+      // latest episode, going through towards the first episode
+      for (var i = api_num_episodes-1; i >= 0; i--) {
         var no_stamp = false;
-        var stamp = episodes[i]['airstamp'];
+        var stamp = api_episodes[i]['airstamp'];
+        // if the stamp is non existant, continue to the next iteration
         if (stamp == null || stamp == "") {
           continue;
         }
-        var airdate = getAirdate(data, i);
-        if (airdate[1] < now) {
-          number_of_episodes_we_know = i+1;
+        // if the current episode starts before today, make that episode number
+        // be the number of episodes that we know of. Break out of the loop
+        var airTime = getAirdate(api, i);
+        var start_time = airTime[0];
+        var end_time = airTime[1];
+        if (end_time < now) {
+          sheet_num_episodes = i+1;
           break;
         }
       }
@@ -357,64 +439,73 @@ function run() {
 
     // Get the null stamps from the spreadsheet
     var episodes_with_null_stamps = new Array();
-    if (sheet.getRange(currentshow_base1, 4).isBlank()) {
+    if (sheet.isNullColumnBlank(currentshow_index)) {
       var json_null_stamped_episodes = {};
     }
     else {
-      var json_null_stamped_episodes = JSON.parse(sheet.getRange(currentshow_base1, 4).getValue());
+      var json_null_stamped_episodes = JSON.parse(sheet.getNullColumn(currentshow_index));
     }
 
     var episodes_with_null_stamps = [];
 
+    // Populate my array of episodes with null stamps with the api data
     for (var x in json_null_stamped_episodes) {
       episodes_with_null_stamps.push(json_null_stamped_episodes[x]);
     }
 
     Logger.log("Episodes with null stamps: " + episodes_with_null_stamps);
+
+    // Iterate through all these episodes and check to see if the stamp has been
+    // updated from null. If it has check if the airdate for it is after today,
+    // and if it is prepare it for addition to the calendar.
     var indices_to_remove = new Array();
     for (var i = 0; i < episodes_with_null_stamps.length; i++) {
       var episode = episodes_with_null_stamps[i];
-      var stamp = episodes[episode]['airstamp'];
+      var stamp = api_episodes[episode]['airstamp'];
       // If a show is no longer null, then I want it added to the calendar, so long as it is still a future event
       if (stamp != null && stamp != "") {
         indices_to_remove.push(i);
-        airdate = getAirdate(data, episode);
-        if (airdate[1] > new Date()) {
-          add_show_to_calendar(data['name'], airdate);
-          episodes_added_to_calendar.push(data['name'] + ": " + airdate[0]);
+        var airTime = getAirdate(api, episode);
+        var start_time = airTime[0];
+        var end_time = airTime[1];
+        if (end_time > new Date()) {
+          add_show_to_calendar(api['name'], start_time, end_time);
+          episodes_added_to_calendar.push(api['name'] + ": " + start_time);
         }
       }
     }
 
+    // Now remove the episodes from the null list if we determined that they are
+    // no longer null
     for (var i = 0; i < indices_to_remove.length; i++) {
       episodes_with_null_stamps.splice(indices_to_remove[i], 1);
     }
 
 
-
-
     // if this happens, we need to add them to calendar
-    while (num_episodes > number_of_episodes_we_know) {
+    while (api_num_episodes > sheet_num_episodes) {
       var no_stamp = false;
-      var stamp = episodes[number_of_episodes_we_know]['airstamp'];
+      var stamp = api_episodes[sheet_num_episodes]['airstamp'];
       if (stamp == null || stamp == "") {
-        episodes_with_null_stamps.push(number_of_episodes_we_know);
-        number_of_episodes_we_know++;
+        episodes_with_null_stamps.push(sheet_num_episodes);
+        sheet_num_episodes++;
         Logger.log(showname);
-        email_error_about_no_airstamp(showname, number_of_episodes_we_know)
+        email_error_about_no_airstamp(showname, sheet_num_episodes)
         continue;
       }
-      airdate = getAirdate(data, number_of_episodes_we_know);
-      add_show_to_calendar(data['name'], airdate);
-      episodes_added_to_calendar.push(data['name'] + ": " + airdate[0]);
-      number_of_episodes_we_know++;
+      airTime = getAirdate(api, sheet_num_episodes);
+      var start_time = airTime[0];
+      var end_time = airTime[1];
+      add_show_to_calendar(api['name'], start_time, end_time);
+      episodes_added_to_calendar.push(api['name'] + ": " + start_time);
+      sheet_num_episodes++;
     }
 
     var myJsonString = JSON.stringify(episodes_with_null_stamps);
-    sheet.getRange(currentshow_base1, 4).setValue(myJsonString);
+    sheet.setNullColumn(currentshow_index, myJsonString);
 
-    //set number_of_episodes_we_know in the sheet
-    sheet.getRange(currentshow_base1, 2).setValue(number_of_episodes_we_know);
+    //set sheet_num_episodes in the sheet
+    sheet.setNumberOfEpisodes(currentshow_index, sheet_num_episodes);
     Logger.log("==============================");
   }
 
