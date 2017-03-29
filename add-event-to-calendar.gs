@@ -331,7 +331,7 @@ function addEmailedShowsToSheet(sheet) {
   }
 }
 
-function getResponseWithShowScores(showname) {
+function getResponseWithShowScores(showname, episodes_added_to_calendar) {
   // get the api url for the current show
   var url = getScoreURL(showname.toLowerCase());
 
@@ -359,7 +359,7 @@ function getResponseWithShowScores(showname) {
   return response;
 }
 
-function getResponseWithEpisodes(id) {
+function getResponseWithEpisodes(id, episodes_added_to_calendar) {
   // get the api url for the current show
   var url = getEpisodeURL(id);
 
@@ -477,7 +477,7 @@ function run() {
     var sheet_show_id = sheet.getShowID(currentshow_index);
     // if no show id in sheet, get the list of shows with the same name
     if (sheet_show_id == null || sheet_show_id == "") {
-      var response = getResponseWithShowScores(showname);
+      var response = getResponseWithShowScores(showname, episodes_added_to_calendar);
       var json_string = response.getContentText();
       var api_w_score = JSON.parse(json_string);
       if (api_w_score.length == 1) {
@@ -505,7 +505,7 @@ function run() {
     sheet.Update();
     sheet_show_id = sheet.getShowID(currentshow_index);
 
-    var response = getResponseWithEpisodes(sheet_show_id);
+    var response = getResponseWithEpisodes(sheet_show_id, episodes_added_to_calendar);
 
 
     // Get the tv show data from the API
