@@ -129,6 +129,23 @@ function email_error_about_the_reset(showname, sheet_number_episodes, num_episod
   var e = new Email(subject, body);
   e.Send();
 }
+
+function emailUserToManuallyEnterShowID(api_w_score) {
+  var body = "TV Show ID could not be determined. Please Review the below shows"
+  body = body + " that matched your search and add the ID of one of them to the"
+  body = body + " TV Show Google Sheet\n\n"
+
+  var arrayLength = api_w_score.length;
+  for (var i = 0; i < arrayLength; i++) {
+    var name = api_w_score[i]['show']['name']
+    var url = api_w_score[i]['show']['url']
+    var id = api_w_score[i]['show']['id']
+    body = body + "ID: " + id + " = " + name + " -- " + url + "\n"
+  }
+  var subject = "Automated Message: TV Show ID Could not be Determined"
+  var e = new Email(subject, body);
+  e.Send();
+}
 //}}}
 
 var idx = 0;
@@ -205,15 +222,18 @@ function getAirdate(api, episode_num) {
   return [date_start, date_end];
 }
 
-function getURL(name) {
-  var url1 = "http://api.tvmaze.com/singlesearch/shows?q="
-  var url2 = name;
-  var url3 = "&embed=episodes"
-  var url = url1 + url2 + url3;
+function getScoreURL(name) {
+  var url = "http://api.tvmaze.com/search/shows?q=" + name
 
   Logger.log("URL: " + url);
   return url;
+}
 
+function getEpisodeURL(id) {
+  var url = "http://api.tvmaze.com/shows/" + id + "?embed=episodes"
+
+  Logger.log("URL: " + url);
+  return url;
 }
 
 function getShowsFromEmail() {
@@ -276,11 +296,11 @@ function reset_tv_show(currentshow) {
   var sheet = SpreadsheetApp.openById(spreadsheet_id).getSheets()[0];
 
   // Reset the number of episodes
-  sheet.getRange(currentshow + 1, 2).setValue("");
-  // Reset the Status of the episodes
   sheet.getRange(currentshow + 1, 3).setValue("");
-  // Reset the null column
+  // Reset the Status of the episodes
   sheet.getRange(currentshow + 1, 4).setValue("");
+  // Reset the null column
+  sheet.getRange(currentshow + 1, 5).setValue("");
 }
 
 function addEmailedShowsToSheet(sheet) {
@@ -311,6 +331,62 @@ function addEmailedShowsToSheet(sheet) {
   }
 }
 
+function getResponseWithShowScores(showname) {
+  // get the api url for the current show
+  var url = getScoreURL(showname.toLowerCase());
+
+  // If we fail to get a response, send off some logs and exit
+  var exit_now = false;
+  try {
+    var response = UrlFetchApp.fetch(url);
+  }
+  catch(e) {
+    exit_now = true;
+    var err = e;
+  }
+
+  if (exit_now == true) {
+    if (added_episode_alert == true) {
+      email_alert_for_added_episodes(episodes_added_to_calendar);
+    }
+    if (debug == true) {
+      email_log();
+    }
+
+    email_error(err);
+    throw err;
+  }
+  return response;
+}
+
+function getResponseWithEpisodes(id) {
+  // get the api url for the current show
+  var url = getEpisodeURL(id);
+
+  // If we fail to get a response, send off some logs and exit
+  var exit_now = false;
+  try {
+    var response = UrlFetchApp.fetch(url);
+  }
+  catch(e) {
+    exit_now = true;
+    var err = e;
+  }
+
+  if (exit_now == true) {
+    if (added_episode_alert == true) {
+      email_alert_for_added_episodes(episodes_added_to_calendar);
+    }
+    if (debug == true) {
+      email_log();
+    }
+
+    email_error(err);
+    throw err;
+  }
+  return response;
+}
+
 
 // Google Sheet Class//{{{
 function GoogleSheet() {
@@ -318,28 +394,36 @@ function GoogleSheet() {
   this.getData    = this.base.getDataRange().getValues();
   this.getLastRow = this.base.getDataRange().getLastRow();
 
-  this.getShowName = function(index) {
+  this.getShowID = function(index) {
     return this.getData[index][0];
   };
 
-  this.getNumberOfEpisodes = function(index) {
+  this.getShowName = function(index) {
     return this.getData[index][1];
   };
 
-  this.getShowStatus = function(index) {
+  this.getNumberOfEpisodes = function(index) {
     return this.getData[index][2];
   };
 
+  this.getShowStatus = function(index) {
+    return this.getData[index][3];
+  };
+
   this.isNullColumnBlank = function(show) {
-    return this.base.getRange(show+1, 4).isBlank();
+    return this.base.getRange(show+1, 5).isBlank();
   };
 
   this.getNullColumn = function(show) {
-    return this.base.getRange(show+1, 4).getValue();
+    return this.base.getRange(show+1, 5).getValue();
+  };
+
+  this.setShowID = function(show, string) {
+    this.base.getRange(show+1, 1).setValue(string);
   };
 
   this.setNullColumn = function(show, string) {
-    this.base.getRange(show+1, 4).setValue(string);
+    this.base.getRange(show+1, 5).setValue(string);
   };
 
   this.appendShow = function(showname) {
@@ -347,11 +431,11 @@ function GoogleSheet() {
   };
 
   this.setStatus = function(show, show_status) {
-    this.base.getRange(show+1, 3).setValue(show_status);
+    this.base.getRange(show+1, 4).setValue(show_status);
   };
 
   this.setNumberOfEpisodes = function(show, value) {
-    this.base.getRange(show+1, 2).setValue(value);
+    this.base.getRange(show+1, 3).setValue(value);
   };
 
   this.Update = function() {
@@ -389,30 +473,40 @@ function run() {
     var sheet_num_episodes = undefined;
     var sheet_num_episodes = sheet.getNumberOfEpisodes(currentshow_index);
 
-    // get the api url for the current show
-    var url = getURL(showname.toLowerCase());
-
-    // If we fail to get a response, send off some logs and exit
-    var exit_now = false;
-    try {
-      var response = UrlFetchApp.fetch(url);
-    }
-    catch(e) {
-      exit_now = true;
-      var err = e;
-    }
-
-    if (exit_now == true) {
-      if (added_episode_alert == true) {
-        email_alert_for_added_episodes(episodes_added_to_calendar);
+    // get show ID
+    var sheet_show_id = sheet.getShowID(currentshow_index);
+    // if no show id in sheet, get the list of shows with the same name
+    if (sheet_show_id == null || sheet_show_id == "") {
+      var response = getResponseWithShowScores(showname);
+      var json_string = response.getContentText();
+      var api_w_score = JSON.parse(json_string);
+      if (api_w_score.length == 1) {
+        var id = api_w_score[0]['show']['id'].toString()
+        sheet.setShowID(currentshow_index, id);
       }
-      if (debug == true) {
-        email_log();
+      else if (api_w_score < 1) {
+        // Error
+        continue;
       }
+      else {
+        var score1 = parseFloat(api_w_score[0]['score'])
+        var score2 = parseFloat(api_w_score[1]['score'])
+        var diff = score1 - score2
 
-      email_error(err);
-      throw err;
+        if (diff < 1) {
+          emailUserToManuallyEnterShowID(api_w_score);
+          continue;
+        }
+        var id = api_w_score[0]['show']['id'].toString()
+        sheet.setShowID(currentshow_index, id);
+      }
     }
+
+    sheet.Update();
+    sheet_show_id = sheet.getShowID(currentshow_index);
+
+    var response = getResponseWithEpisodes(sheet_show_id);
+
 
     // Get the tv show data from the API
     var json_string = response.getContentText();
@@ -531,8 +625,11 @@ function run() {
       airTime = getAirdate(api, sheet_num_episodes);
       var start_time = airTime[0];
       var end_time = airTime[1];
-      add_show_to_calendar(api['name'], start_time, end_time);
-      episodes_added_to_calendar.push(api['name'] + ": " + start_time);
+      // Only Add the episode of it is still in the future
+      if (end_time > new Date()) {
+          add_show_to_calendar(api['name'], start_time, end_time);
+          episodes_added_to_calendar.push(api['name'] + ": " + start_time);
+        }
       sheet_num_episodes++;
     }
 

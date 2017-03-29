@@ -1,3 +1,23 @@
+# Important Notes!
+
+If you have used this script before and are coming to update it, please note
+that the spreadsheet data has been shifted to the right 1 column to make room
+fora new column.
+
+This means that now the script expects column `B` to hold the name of the TV
+Show, column `C` holds the number of episodes etc.
+
+The new column `A` will hold the TVMaze Unique ID of the TV Show from now on.
+This is to prevent issues with similar TV Show names and possibly getting TV
+Show Data for the wrong show.
+
+If you are a new user, you can disregard this message and just read the setup.
+
+If you are updating, all you need to do to allow for this change is create a new
+column to the left of your TV Show names (The ID is automatically filled by the
+script if it can determine it properly. If it can't, it will notify you by email
+and give you instructions on changing it manually).
+
 # TV Show Notification
 
 This is a google script that fetches information about TV Shows, and will set
@@ -6,7 +26,7 @@ Shows. The script will find the time of day the show airs as well.
 
 If the date and time cannot be found for a particular show, an email will be
 sent to you to warn you that this happened. A list of the episodes that have
-been found to be null will be held in the fourth column of the spreadsheet. The
+been found to be null will be held in the fifth column of the spreadsheet. The
 script will continue to check these episodes until the script removes them
 (which only happens when a time stamp has been found for it). You may choose to
 remove them yourself by manually editing the cells if you feel the need to do
@@ -30,11 +50,48 @@ folder you want, it doesn't care where it goes.
 
 In your Google Drive, create a new spreadsheet and call it whatever you want.
 We will use this spreadsheet to start adding TV Shows to. As a start, put the
-name of a TV show into cell A1. Note that the "A" column is where all the TV
-show names will be. Column "B" will be used by the script to save how many
+name of a TV show into cell B1. Note that the "B" column is where all the TV
+show names will be. Column "C" will be used by the script to save how many
 episodes the script knows about already. For example, if the script knows of
 40 episodes, but only 40 episodes are still known, the script won't do
 anything for that show until a new episode becomes known.
+
+### Overview of the Columns
+
+#### Column A
+
+Column `A` is used to hold the unique Show ID that TVMaze uses. This value will
+be found automatically if possible using just the TV Show name that you specify.
+If The script has a hard time finding out what TV Show to pick given just the
+name you provide, it will email you a list of the TV Shows that it thinks you
+might be referring to and it will provide you with the unique ID of each, along
+with a URL to go and check to see which show is the one you want. Once you have
+chosen the one you want, manually fill in column `A` with the unique ID.
+
+#### Column B
+
+This Column Holds the Names of the shows. This is (almost always) the only
+column that you will have to edit.
+
+#### Column C
+
+Holds the Number of episodes that the script currently knows about for that TV
+show. This is automatically updated and initialized, so you will probably never
+have to do anything with this.
+
+#### Column D
+
+Holds the current state of the show (ie. Running, ended etc). This is also
+automatically initialized and updated.
+
+#### Column E
+
+Holds the episode numbers of episodes that did not have an airtime provided the
+last time that the script ran. This is automatically initialized and updated as
+well. This column exists so that the script knows to go back and check these
+previous episodes as well as the new ones.
+
+### Continuing with Instructions
 
 Now open the script from the first step. There is a line at the top of the file
 like this:
@@ -62,7 +119,7 @@ for the script to use spreadsheets and stuff like that. You have to say yes or
 the script won't run. If you added something to your sheet earlier, we should
 now have a calendar entry somewhere for that show, as long as it has an upcoming
 episode. If you don't have a calendar entry, check the spreadsheet to see of the
-"B" column was populated with a number. If it wasn't, file an issue. If it is
+"C" column was populated with a number. If it wasn't, file an issue. If it is
 populated, go to your Calendar and do a search. If nothing appears, it probably
 means there is no known upcoming episode for the show.
 
@@ -294,16 +351,16 @@ check for updates for you. So you will need to manually run the
 
 ### What if I Accidentally mess with the data in the sheet?
 
-Changing the "A" column is perfectly okay, since this is the column you will use
+Changing the "B" column is perfectly okay, since this is the column you will use
 to tell the script what shows you want. You can freely add and delete new shows
-as you choose.
+as you choose (Deleting a show consists of just deleting that whole row).
 
-If you change data in any of the other columns and ff it isn't too late to undo
+If you change data in any of the other columns and if it isn't too late to undo
 what you just did, then do that.
 
-Otherwise you can just make the cell blank. A blank cell is interpreted as an
-undefined value and the script will create a starting value, as if it was the
-first time it was populating that cell.
+Otherwise you can just make the changed cells blank. A blank cell is interpreted
+as an undefined value and the script will create a starting value, as if it was
+the first time it was populating that cell.
 
 ## Thanks To
 
