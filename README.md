@@ -91,6 +91,13 @@ last time that the script ran. This is automatically initialized and updated as
 well. This column exists so that the script knows to go back and check these
 previous episodes as well as the new ones.
 
+#### Column G
+
+Column `G` is currently only used for cell `G1` which stores the commit hash
+that was found to be the most recent commit the last time the script ran. The
+script uses this value to check to see if an update has been made to the script
+since the last time you ran the script.
+
 ### Continuing with Instructions
 
 Now open the script from the first step. There is a line at the top of the file

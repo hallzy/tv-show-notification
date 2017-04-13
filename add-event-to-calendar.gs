@@ -256,7 +256,7 @@ function getShowsFromEmail() {
   return shows_to_add;
 }
 
-function check_for_updates() {
+function check_for_updates(sheet) {
   // Get the URL to check. This will be the github page with the list of commits
   // for the specified branch
   var url = "https://github.com/hallzy/tv-show-notification/commits/";
@@ -271,25 +271,21 @@ function check_for_updates() {
   var newhash = response.match(/data-clipboard-text="(.*)" data-copied-hint/);
   newhash = newhash[1];
 
-  // Get the previsously saved hash from the cache.
-  var cache = CacheService.getScriptCache();
-  var oldhash = cache.get("hash");
-
-  Logger.log("Old hash is: " + oldhash);
-
-  // if no oldhash exists, then this is the first time we have run this update.
-  // So we will just update the cache silently
-  if (oldhash == null) {
-    cache.put("hash", newhash);
+  var oldhash;
+  // Get the previsously saved hash from the sheet
+  if (sheet.isVersionHashBlank()) {
     Logger.log("hash is initialized to: " + newhash);
+    sheet.setVersionHash(newhash)
   }
-  // if the old hash and new hash don't agree, then assume that means that the
-  // script has been updated, and store newhash in the cache
-  else if (newhash != oldhash) {
-    cache.put("hash", newhash);
-    Logger.log("hash is now: " + newhash);
-    email_alert_for_script_update(newhash, oldhash);
+  else {
+    oldhash = sheet.getVersionHash()
+    if (newhash != oldhash) {
+      Logger.log("hash is now: " + newhash);
+      email_alert_for_script_update(newhash, oldhash);
+      sheet.setVersionHash(newhash)
+    }
   }
+  Logger.log("Old hash is: " + oldhash);
 }
 
 function reset_tv_show(currentshow) {
@@ -410,6 +406,14 @@ function GoogleSheet() {
     return this.getData[index][3];
   };
 
+  this.getVersionHash = function() {
+    return this.getData[0][6]
+  };
+
+  this.isVersionHashBlank = function() {
+    return this.base.getRange(1, 7).isBlank();
+  };
+
   this.isNullColumnBlank = function(show) {
     return this.base.getRange(show+1, 5).isBlank();
   };
@@ -424,6 +428,10 @@ function GoogleSheet() {
 
   this.setNullColumn = function(show, string) {
     this.base.getRange(show+1, 5).setValue(string);
+  };
+
+  this.setVersionHash = function(hash) {
+    this.base.getRange(1, 7).setValue(hash);
   };
 
   this.appendShow = function(showname) {
@@ -451,7 +459,7 @@ function run() {
   var sheet = new GoogleSheet();
 
   if (auto_update_check == true) {
-    check_for_updates();
+    check_for_updates(sheet);
   }
 
   addEmailedShowsToSheet(sheet);
@@ -650,5 +658,3 @@ function run() {
   }
 
 }
-
-
