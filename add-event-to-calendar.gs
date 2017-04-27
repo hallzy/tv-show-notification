@@ -238,6 +238,10 @@ function getEpisodeURL(id) {
 
 function getShowsFromEmail() {
   var label = GmailApp.getUserLabelByName(mylabel);
+  if (label == null) {
+    Logger.log("label \"" + mylabel + "\" does not exist.");
+    return -1;
+  }
   var threads = label.getThreads();
 
   var shows_to_add = new Array();
@@ -308,6 +312,9 @@ function addEmailedShowsToSheet(sheet) {
 
   // Get show names from emails
   var shows_to_add_from_email = getShowsFromEmail();
+  if (shows_to_add_from_email == -1) {
+    return -1;
+  }
 
   // Convert all shows to lowercase
   var tmp = shows_to_add_from_email.join("~~~").toLowerCase();
