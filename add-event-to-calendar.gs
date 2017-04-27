@@ -442,7 +442,7 @@ function GoogleSheet() {
   };
 
   this.appendShow = function(showname) {
-    this.base.appendRow([showname]);
+    this.base.appendRow(["", showname]);
   };
 
   this.setStatus = function(show, show_status) {
@@ -499,7 +499,7 @@ function run() {
         var id = api_w_score[0]['show']['id'].toString()
         sheet.setShowID(currentshow_index, id);
       }
-      else if (api_w_score < 1) {
+      else if (api_w_score.length < 1) {
         // Error
         continue;
       }
