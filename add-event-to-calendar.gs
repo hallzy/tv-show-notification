@@ -250,8 +250,15 @@ function getShowsFromEmail() {
     // Iterate through all the messages in the thread
     for (var k = 0; k < threads[i].getMessageCount(); k++) {
       var msg = threads[i].getMessages()[k].getBody();
-      msg = msg.split("<br />\n");
-      shows_to_add.push.apply(shows_to_add, msg);
+      var ar = [];
+      var sp = msg.split("<br />\n");
+      for (var n = 0; n < sp.length; n++) {
+        var sub = sp[n].split("\n");
+        for (var j = 0; j < sub.length; j++) {
+          ar.push(sub[j]);
+        }
+      }
+      shows_to_add.push.apply(shows_to_add, ar);
     }
     threads[i].moveToTrash();
   }
@@ -337,11 +344,14 @@ function addEmailedShowsToSheet(sheet) {
 function getResponseWithShowScores(showname, episodes_added_to_calendar) {
   // get the api url for the current show
   var url = getScoreURL(showname.toLowerCase());
+  // remove whitespace from the end of the url
+  url = url.replace(/^\s+|\s+$/g, '');
 
   // If we fail to get a response, send off some logs and exit
   var exit_now = false;
   try {
     var response = UrlFetchApp.fetch(url);
+    return response;
   }
   catch(e) {
     exit_now = true;
