@@ -279,7 +279,7 @@ function check_for_updates(sheet) {
   // Search for this regex to get the latest hash - Only use index 1 for this.
   // Index 0 is the whole match, while index 1 is just the part that is matched
   // by the part in parenthesis
-  var newhash = response.match(/data-clipboard-text="(.*)" data-copied-hint/);
+  var newhash = response.match(/data-clipboard-text="(.*)"/);
   newhash = newhash[1];
 
   var oldhash;
