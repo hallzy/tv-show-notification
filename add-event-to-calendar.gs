@@ -275,11 +275,13 @@ function check_for_updates(sheet) {
 
   // Get the page as a string
   var response = UrlFetchApp.fetch(url).getContentText();
+  response = response.slice(response.indexOf("clipboard-copy"))
+  response = response.slice(response.indexOf("value="))
 
   // Search for this regex to get the latest hash - Only use index 1 for this.
   // Index 0 is the whole match, while index 1 is just the part that is matched
   // by the part in parenthesis
-  var newhash = response.match(/data-clipboard-text="(.*)"/);
+  var newhash = response.match(/value="(.*)"/);
   newhash = newhash[1];
 
   var oldhash;
