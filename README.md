@@ -86,7 +86,7 @@ automatically initialized and updated.
 
 #### Column E
 
-Holds the episode numbers of episodes that did not have an airtime provided the
+Holds the numbers of episodes that did not have an airtime provided the
 last time that the script ran. This is automatically initialized and updated as
 well. This column exists so that the script knows to go back and check these
 previous episodes as well as the new ones.
