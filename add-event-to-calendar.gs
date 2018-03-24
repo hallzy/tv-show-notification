@@ -1,6 +1,6 @@
 // If you are unsure if a show will be recognized, check to see what data is given by going to:
 // http://api.tvmaze.com/singlesearch/shows?q=TV SHOW NAME&embed=episodes
-// by replacing "TV SHOW NAME" with the name of the tv show
+// by replacing "TV SHOW NAME" with the name of the TV show
 
 // For a sheet with
 // URL = https://docs.google.com/spreadsheets/d/1RSklW9SKI535TG0LnH9cjU2c3spLtnbPBAKWahUWO7I/edit#gid=0
@@ -178,7 +178,7 @@ function add_show_to_calendar(title, start, end) {
   Logger.log("Added Event: " + title + ", " + start + " to " + end);
 }
 
-// Retrive sthe number of episodes for a tv show from the API
+// Retrieves the number of episodes for a TV show from the API
 function get_number_of_episodes(api) {
   var num = api['_embedded']['episodes'].length;
   Logger.log("Number of episodes: " + num);
@@ -202,11 +202,11 @@ function getAirdate(api, episode_num) {
   var month_num = parseInt(arr[1], 10) - 1;
   var month_str = month[month_num];
 
-  // There is a T in the stamp from tvmaze... so remove it.
+  // There is a T in the stamp from tvmaze... So remove it.
   arr = arr[2].split("T");
   var day = arr[0];
   var time = arr[1];
-  // add a space in front of the timzone offset
+  // add a space in front of the timezone offset
   time = time.split('+').join(' +');
   time = time.split('-').join(' -');
 
@@ -285,7 +285,7 @@ function check_for_updates(sheet) {
   newhash = newhash[1];
 
   var oldhash;
-  // Get the previsously saved hash from the sheet
+  // Get the previously saved hash from the sheet
   if (sheet.isVersionHashBlank()) {
     Logger.log("hash is initialized to: " + newhash);
     sheet.setVersionHash(newhash)
@@ -344,9 +344,9 @@ function addEmailedShowsToSheet(sheet) {
 }
 
 function getResponseWithShowScores(showname, episodes_added_to_calendar) {
-  // get the api url for the current show
+  // get the API URL for the current show
   var url = getScoreURL(showname.toLowerCase());
-  // remove whitespace from the end of the url
+  // remove whitespace from the end of the URL
   url = url.replace(/^\s+|\s+$/g, '');
 
   // If we fail to get a response, send off some logs and exit
@@ -375,7 +375,7 @@ function getResponseWithShowScores(showname, episodes_added_to_calendar) {
 }
 
 function getResponseWithEpisodes(id, episodes_added_to_calendar) {
-  // get the api url for the current show
+  // get the API URL for the current show
   var url = getEpisodeURL(id);
 
   // If we fail to get a response, send off some logs and exit
@@ -474,7 +474,7 @@ function GoogleSheet() {
 //}}}
 
 function run() {
-  // Get the google sheet with tv show data
+  // Get the google sheet with TV show data
   var sheet = new GoogleSheet();
 
   if (auto_update_check == true) {
@@ -485,7 +485,7 @@ function run() {
 
   var episodes_added_to_calendar = new Array();
 
-  // Iterate through every tv show
+  // Iterate through every TV show
   for (k = 0; k < sheet.getLastRow; k++) {
     var currentshow_index = k;
 
@@ -535,7 +535,7 @@ function run() {
     var response = getResponseWithEpisodes(sheet_show_id, episodes_added_to_calendar);
 
 
-    // Get the tv show data from the API
+    // Get the TV show data from the API
     var json_string = response.getContentText();
     var api = JSON.parse(json_string);
     var api_episodes = api['_embedded']['episodes'];
@@ -565,17 +565,17 @@ function run() {
     }
 
     // If we don't have a number, create it. The number will be the number of
-    // episodes that are before todays date
+    // episodes that are before today's date
     if (sheet_num_episodes == null || sheet_num_episodes == "") {
       var now = new Date();
 
       sheet_num_episodes = 0;
-      // Iterate through every episode of the current tv show, starting from the
+      // Iterate through every episode of the current TV show, starting from the
       // latest episode, going through towards the first episode
       for (var i = api_num_episodes-1; i >= 0; i--) {
         var no_stamp = false;
         var stamp = api_episodes[i]['airstamp'];
-        // if the stamp is non existant, continue to the next iteration
+        // if the stamp is non existent, continue to the next iteration
         if (stamp == null || stamp == "") {
           continue;
         }
@@ -603,7 +603,7 @@ function run() {
 
     var episodes_with_null_stamps = [];
 
-    // Populate my array of episodes with null stamps with the api data
+    // Populate my array of episodes with null stamps with the API data
     for (var x in json_null_stamped_episodes) {
       episodes_with_null_stamps.push(json_null_stamped_episodes[x]);
     }
