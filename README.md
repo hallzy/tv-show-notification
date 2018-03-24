@@ -312,25 +312,6 @@ gmail.
 The default setting is `"TV Show Script"`.
 
 
-### var branch_to_check_for_updates
-
-This variable tells the script what branch to check for updates. It will use
-this to see if any new commits have come in since the last time the update
-function was run.
-
-#### Default
-
-The default setting is `"master"`.
-
-#### Possible Values:
-
-`var branch_to_check_for_updates = "master"`
-
-`var branch_to_check_for_updates = "testing"`
-
-`var branch_to_check_for_updates = "dev"`
-
-
 ### var auto_update_check
 
 This variable tells the script if you want the update function to run
@@ -353,6 +334,73 @@ looking for TV Shows.
 `var auto_update_check = false` Means that the script will never automatically
 check for updates for you. So you will need to manually run the
 `check_for_updates` function in order to get updates.
+
+
+### var branch_to_check_for_updates
+
+NOTE: This variable has NO effect if `auto_update_check` is set to `false`
+
+This variable tells the script what branch to check for updates. It will use
+this to see if any new commits have come in since the last time the update
+function was run.
+
+#### Default
+
+The default setting is `"master"`.
+
+#### Possible Values:
+
+`var branch_to_check_for_updates = "master"`
+
+`var branch_to_check_for_updates = "testing"`
+
+`var branch_to_check_for_updates = "dev"`
+
+
+### var api_token
+
+NOTE: This variable has NO effect if `auto_update_check` is set to `false`
+
+This variable holds the value of your Github API Token which will ONLY be used
+for the purpose of checking for updates. The Github API does not require a
+token, but you will be subject to rate limiting if you don't. As a result, if
+you do not provide a token to this script, you may find that you get errors in
+your script because the API didn't return anything. That being said, it is up to
+you whether or not you want to provide a token. The script will work whether you
+provide a token or leave the string empty.
+
+#### How to Get a Token?
+
+First, you need a Github Account. If you do not have one, then register for one.
+Once you have an account:
+
+1. Login
+2. Click your profile picture in the top right corner of the page
+3. Select `Settings` from the drop down
+4. In the left pane select `Developer Settings`
+5. In the left pane select `Personal Access Tokens`
+6. Click `Generate new token`
+7. Give a description for the token.
+8. Below that are scopes. We do NOT need any of them, so leave them all
+   unchecked and click `Generate Token`
+
+The next page shows the token. Use this as your token. Note that you will never
+be able to see that token again, so copy it there and put it into the script
+right away. If you lose the token somehow that is not big deal. Just generate a
+new one with the above steps and delete your old token.
+
+#### Default
+
+The default setting is `""` which means that NO token will be used
+
+#### Possible Values:
+
+`var branch_to_check_for_updates = ""`
+
+If `123456` is your token:
+
+`var branch_to_check_for_updates = "123456"`
+
 
 ## Questions
 

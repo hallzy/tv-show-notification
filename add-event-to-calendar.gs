@@ -11,8 +11,9 @@ var calendar_id = "";
 var debug = false;
 var added_episode_alert = false;
 var mylabel = "TV Show Script";
-var branch_to_check_for_updates = "master";
 var auto_update_check = true;
+var branch_to_check_for_updates = "master";
+var api_token = ""
 
 var TESTING = false;
 
@@ -268,21 +269,44 @@ function getShowsFromEmail() {
 }
 
 function check_for_updates(sheet) {
-  // Get the URL to check. This will be the github page with the list of commits
-  // for the specified branch
-  var url = "https://github.com/hallzy/tv-show-notification/commits/";
+  // Get the Github API URL where we can find the latest commit hash.
+  var url = "https://api.github.com/repos/hallzy/tv-show-notification/commits/"
   url = url + branch_to_check_for_updates;
 
-  // Get the page as a string
-  var response = UrlFetchApp.fetch(url).getContentText();
-  response = response.slice(response.indexOf("clipboard-copy"))
-  response = response.slice(response.indexOf("value="))
+  // If an API token has been specified then use it, otherwise, don't.
+  if (api_token !== "") {
+    url = url + "?access_token="
+    url = url + api_token
+  }
 
-  // Search for this regex to get the latest hash - Only use index 1 for this.
-  // Index 0 is the whole match, while index 1 is just the part that is matched
-  // by the part in parenthesis
-  var newhash = response.match(/value="(.*)"/);
-  newhash = newhash[1];
+  // Try to fetch the content of the API as a string
+  try {
+    var newhash = UrlFetchApp.fetch(url).getContentText()
+  }
+  catch(e) {
+    Logger.log("Github API Error. No commit found.")
+    email_error(e)
+    throw e
+  }
+  // Try to parse the API response as JSON
+  try {
+    newhash = JSON.parse(newhash)
+  }
+  catch(e) {
+    Logger.log("Failed to Parse \"newhash\"")
+    email_error(e)
+    throw e
+  }
+  // Try to access the "sha" property
+  try {
+    newhash = newhash["sha"]
+  }
+  catch(e) {
+    Logger.log("No hash in JSON")
+    email_error(e)
+    throw e
+  }
+  Logger.log(newhash)
 
   var oldhash;
   // Get the previously saved hash from the sheet
