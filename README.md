@@ -1,23 +1,3 @@
-# Important Notes!
-
-If you have used this script before and are coming to update it, please note
-that the spreadsheet data has been shifted to the right 1 column to make room
-fora new column.
-
-This means that now the script expects column `B` to hold the name of the TV
-Show, column `C` holds the number of episodes etc.
-
-The new column `A` will hold the TVMaze Unique ID of the TV Show from now on.
-This is to prevent issues with similar TV Show names and possibly getting TV
-Show Data for the wrong show.
-
-If you are a new user, you can disregard this message and just read the setup.
-
-If you are updating, all you need to do to allow for this change is create a new
-column to the left of your TV Show names (The ID is automatically filled by the
-script if it can determine it properly. If it can't, it will notify you by email
-and give you instructions on changing it manually).
-
 # TV Show Notification
 
 This is a google script that fetches information about TV Shows, and will set
@@ -46,7 +26,8 @@ This will be a step by step guide to start using the script:
 Open you Google Drive, and create a new Google Script file by clicking `New ->
 more -> Google Apps Script`. Call it whatever you want, and just copy the
 contents of `add-event-to-calendar.gs` to this new file. You can bury it in any
-folder you want, it doesn't care where it goes.
+folder you want, it doesn't care where it goes (the `*.ts` file is for
+development only and will not work directly with google script).
 
 In your Google Drive, create a new spreadsheet and call it whatever you want.
 We will use this spreadsheet to start adding TV Shows to. As a start, put the
@@ -104,7 +85,7 @@ Now open the script from the first step. There is a line at the top of the file
 like this:
 
 ```javascript
-var spreadsheet_id = "FILL THIS"
+var SPREADSHEET_ID = "FILL THIS"
 ```
 
 Change the `FILL THIS` to the id of the spreadsheet you made in the previous
@@ -117,7 +98,7 @@ Then `1RSklW9SKI535TG0LnH9cjU2c3spLtnbPBAKWahUWO7I` is your id, so the
 `spreadsheet_id` variable changes to this:
 
 ```javascript
-var spreadsheet_id = "1RSklW9SKI535TG0LnH9cjU2c3spLtnbPBAKWahUWO7I"
+var SPREADSHEET_ID = "1RSklW9SKI535TG0LnH9cjU2c3spLtnbPBAKWahUWO7I"
 ```
 
 Now make sure that the script is saved. And run the script by pressing `Run ->
@@ -170,19 +151,19 @@ All variables must contain a value of some kind.
 
 
 
-### var spreadsheet_id
+### var SPREADSHEET_ID
 
 This is a string that comes from the URL of the spreadsheet you will use to
 store your tv shows. For example, if your spreadsheet has the URL
 `https://docs.google.com/spreadsheets/d/1RSklW9SKI535TG0LnH9cjU2c3spLtnbPBAKWahUWO7I/edit#gid=0`,
-then your `spreadsheet_id` is `"1RSklW9SKI535TG0LnH9cjU2c3spLtnbPBAKWahUWO7I"`,
+then your `SPREADSHEET_ID` is `"1RSklW9SKI535TG0LnH9cjU2c3spLtnbPBAKWahUWO7I"`,
 with the quotes included.
 
 This is essential in order to get the script to work.
 
 
 
-### var get_status_change_alert
+### var GET_STATUS_CHANGE_ALERT
 
 This is a variable that controls if you get email notifications for a status
 change of a TV Show. For example, if you are following a TV Show, and it changes
@@ -195,15 +176,15 @@ The default setting is `false`.
 
 #### Possible Values:
 
-`var get_status_change_alert = true` means that you will receive the email
+`var GET_STATUS_CHANGE_ALERT = true` means that you will receive the email
 notification when this occurs.
 
-`var get_status_change_alert = false` means that you will NOT receive the email
+`var GET_STATUS_CHANGE_ALERT = false` means that you will NOT receive the email
 notification when this occurs.
 
 
 
-### var calendar_id
+### var CALENDAR_ID
 
 This variable tells the script what calendar it should use.
 
@@ -213,11 +194,11 @@ The default setting is `""`.
 
 #### Possible Values:
 
-`var calendar_id = ""` or `var calendar_id = null` means that the script will
+`var CALENDAR_ID = ""` or `var calendar_id = null` means that the script will
 use the default calendar that is setup (by default, this is the main calendar
 that comes with your account).
 
-`var calendar_id = "calendarid"` specifies to use a specific calendar based on
+`var CALENDAR_ID = "calendarid"` specifies to use a specific calendar based on
 the id. For this example my id is `calendarid`. To find your calendar id, go to
 your calendars. On the left side will be a list of calendars that you have.
 Hover over the calendar you want and click the little arrow that shows up to the
@@ -227,7 +208,7 @@ value and put it into the script as the above variable.
 
 
 
-### var debug
+### var DEBUG
 
 This variable tells the script if you want to get emailed log reports.
 
@@ -237,15 +218,15 @@ The default setting is `false`.
 
 #### Possible Values:
 
-`var debug = true` means that you want to get emails with the logs for
+`var DEBUG = true` means that you want to get emails with the logs for
 every execution of the script.
 
-`var debug = false` means that you do NOT want to get emails with the logs
+`var DEBUG = false` means that you do NOT want to get emails with the logs
 at all.
 
 
 
-### var added_episode_alert
+### var ADDED_EPISODE_ALERT
 
 This variable tells the script if you want to get emailed every time a new
 episode is added to your calendar. It will give you the name of the show, and
@@ -258,18 +239,18 @@ The default setting is `false`.
 
 #### Possible Values:
 
-`var added_episode_alert = true` means that you want to get the emails.
+`var ADDED_EPISODE_ALERT = true` means that you want to get the emails.
 
-`var added_episode_alert = false` means that you do NOT want to get the emails.
+`var ADDED_EPISODE_ALERT = false` means that you do NOT want to get the emails.
 
 
-### var mylabel
+### var MYLABEL
 
 This variable tells the script what label to look for in your gmail for adding
 new episodes.
 
 The script will check your inbox for messages with a label on them that matches
-the variable `mylabel`. If it does, it checks takes the body of the email and
+the variable `MYLABEL`. If it does, it checks takes the body of the email and
 assumes that it is a newline separated list of TV Show titles (ie. Your email is
 a list of TV Show titles with a new title on each line). It will then take those
 titles, and append them to your spreadsheet for you as long as that TV show does
@@ -280,7 +261,7 @@ spelling, spelling or other characters will be treated as a new show).
 The easiest way to make assign labels automatically is to setup a filter in
 gmail.
 
-#### Setting up a Filter to Use "mylabel"
+#### Setting up a Filter to Use "MYLABEL"
 
 1. Go to your gmail inbox.
 
@@ -298,7 +279,7 @@ gmail.
    email with the subject `TV Shows: Add to Calendar`).
 
 6. On the next screen check the box for `Apply the label:` and then select the
-   label that you defined by the variable `mylabel`. If you haven't already
+   label that you defined by the variable `MYLABEL`. If you haven't already
    created this label, select the button to create a new label.
 
 7. Select `Create Filter`.
@@ -312,7 +293,7 @@ gmail.
 The default setting is `"TV Show Script"`.
 
 
-### var auto_update_check
+### var SCRIPT_AUTO_UPDATE_CHECK
 
 This variable tells the script if you want the update function to run
 automatically when you run your script. When the update script is run you will
@@ -328,15 +309,15 @@ The default setting is `true`.
 
 #### Possible Values:
 
-`var auto_update_check = true` Means to check for updates automatically before
+`var SCRIPT_AUTO_UPDATE_CHECK = true` Means to check for updates automatically before
 looking for TV Shows.
 
-`var auto_update_check = false` Means that the script will never automatically
+`var SCRIPT_AUTO_UPDATE_CHECK = false` Means that the script will never automatically
 check for updates for you. So you will need to manually run the
 `check_for_updates` function in order to get updates.
 
 
-### var branch_to_check_for_updates
+### var BRANCH_TO_CHECK_FOR_UPDATES
 
 NOTE: This variable has NO effect if `auto_update_check` is set to `false`
 
@@ -350,16 +331,16 @@ The default setting is `"master"`.
 
 #### Possible Values:
 
-`var branch_to_check_for_updates = "master"`
+`var BRANCH_TO_CHECK_FOR_UPDATES = "master"`
 
-`var branch_to_check_for_updates = "testing"`
+`var BRANCH_TO_CHECK_FOR_UPDATES = "testing"`
 
-`var branch_to_check_for_updates = "dev"`
+`var BRANCH_TO_CHECK_FOR_UPDATES = "dev"`
 
 
-### var api_token
+### var API_TOKEN
 
-NOTE: This variable has NO effect if `auto_update_check` is set to `false`
+NOTE: This variable has NO effect if `SCRIPT_AUTO_UPDATE_CHECK` is set to `false`
 
 This variable holds the value of your Github API Token which will ONLY be used
 for the purpose of checking for updates. The Github API does not require a
@@ -395,11 +376,11 @@ The default setting is `""` which means that NO token will be used
 
 #### Possible Values:
 
-`var branch_to_check_for_updates = ""`
+`var BRANCH_TO_CHECK_FOR_UPDATES = ""`
 
 If `123456` is your token:
 
-`var branch_to_check_for_updates = "123456"`
+`var BRANCH_TO_CHECK_FOR_UPDATES = "123456"`
 
 
 ## Questions
@@ -416,6 +397,23 @@ what you just did, then do that.
 Otherwise you can just make the changed cells blank. A blank cell is interpreted
 as an undefined value and the script will create a starting value, as if it was
 the first time it was populating that cell.
+
+## For Development
+
+Development is to be done in the TypesScript file using the provided Makefile
+for compilation.
+
+In order to compile this script you need the Google Apps Script TypeScript type
+definitions which can be installed with this command:
+
+```
+npm install --save @types/google-apps-script
+```
+
+The header.gs file is just what the top of the final `*.gs` file should look
+like. I made the decision to remove empty space and comments in the compiled
+version but it is still important to have comments for the top part where the
+config variables are.
 
 ## Thanks To
 
