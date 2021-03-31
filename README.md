@@ -1,5 +1,7 @@
 # TV Show Notification
 
+[![paypal](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/donate?business=QMDXUKQXRT75N&currency_code=CAD)
+
 This is a google script that fetches information about TV Shows, and will set
 calendar events in your Google Calendar for air dates of your favourite TV
 Shows. The script will find the time of day the show airs as well.
