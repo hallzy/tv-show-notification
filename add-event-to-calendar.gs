@@ -139,7 +139,8 @@ function emailLog() {
     var e = new Email(subject, body);
     e.Send();
 }
-function emailError(err) {
+function emailError(err, toThrow) {
+    if (toThrow === void 0) { toThrow = true; }
     var body = err.stack;
     if (typeof (body) === 'undefined') {
         body = "<Unknown Stack Trace>";
@@ -147,7 +148,9 @@ function emailError(err) {
     var subject = "TV Show Script: Error";
     var e = new Email(subject, body);
     e.Send();
-    throw err;
+    if (toThrow) {
+        throw err;
+    }
 }
 function emailStatusChange(showname, oldVal, newVal) {
     var body;
@@ -272,7 +275,7 @@ function checkForScriptUpdates() {
     }
     catch (e) {
         Logger.log("Github API Error. No commit found.");
-        emailError(e);
+        emailError(e, false);
         return;
     }
     try {
@@ -280,14 +283,16 @@ function checkForScriptUpdates() {
     }
     catch (e) {
         Logger.log("Failed to Parse \"newhash\"");
-        emailError(e);
+        emailError(e, false);
+        return;
     }
     try {
         newhash = newhash["sha"];
     }
     catch (e) {
         Logger.log("No hash in JSON");
-        emailError(e);
+        emailError(e, false);
+        return;
     }
     Logger.log(newhash);
     if (SHEET.isVersionHashBlank()) {

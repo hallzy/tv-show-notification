@@ -191,7 +191,7 @@ function emailLog() : void {
 // @param  Object  err   A caught exception object.
 //
 // @return  void. Always throws the exception so that execution halts.
-function emailError(err : Error) : void {
+function emailError(err : Error, toThrow : boolean = true) : void {
     var body : string | undefined = err.stack;
 
     if (typeof(body) === 'undefined') {
@@ -202,7 +202,9 @@ function emailError(err : Error) : void {
     var e : Email = new Email(subject, body);
     e.Send();
 
-    throw err;
+    if (toThrow) {
+        throw err;
+    }
 }
 
 // Email a notification about a change in status of a show
@@ -397,7 +399,7 @@ function checkForScriptUpdates() : void {
         newhash = UrlFetchApp.fetch(url).getContentText()
     } catch(e) {
         Logger.log("Github API Error. No commit found.")
-        emailError(e)
+        emailError(e, false)
         return;
     }
 
@@ -406,7 +408,8 @@ function checkForScriptUpdates() : void {
         newhash = JSON.parse(newhash)
     } catch(e) {
         Logger.log("Failed to Parse \"newhash\"")
-        emailError(e)
+        emailError(e, false)
+        return;
     }
 
     // Try to access the "sha" property
@@ -414,7 +417,8 @@ function checkForScriptUpdates() : void {
         newhash = newhash["sha"]
     } catch(e) {
         Logger.log("No hash in JSON")
-        emailError(e)
+        emailError(e, false)
+        return;
     }
     Logger.log(newhash)
 
