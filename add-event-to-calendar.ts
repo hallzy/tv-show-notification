@@ -990,3 +990,29 @@ function run() : void {
     emailAddedEpisodes();
     emailLog();
 }
+
+function runMissedEpisodes() {
+    validateConfigVariables();
+
+    const end = new Date();
+    end.setDate(end.getDate() - 1);
+    end.setHours(23, 59, 59, 999);
+
+    const start = new Date(2000, 0, 1);
+
+    const pastEvents = CALENDAR.getEvents(start, end);
+
+    if (pastEvents.length) {
+        const body : string = "\n" + pastEvents.map((event) => {
+            const date = event.getStartTime();
+            const month = date.toLocaleString('en-US', { month: 'long' });
+            const day = date.getDate();
+            const year = date.getFullYear();
+
+            return `- ${month} ${day}, ${year} - ${event.getTitle()}`;
+        }).join("\n");
+        const subject : string = "Automated Message: TV Shows Missed"
+        const e : Email = new Email(subject, body);
+        e.Send();
+    }
+}
